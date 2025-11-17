@@ -1,0 +1,3 @@
+Protocol ID,Title,Effect Size (%),Significance (σ),Falsifies RRGM?,Platform
+P1_coherence_timing,Coherence Lifetime vs Measurement Timing Protocol,25.00,1250.00,NO,Superconducting qubit chip (transmon)
+P2_entanglement_range,Entanglement Range under Recursive Protection,0.00,0.00,YES,Trapped ion system or quantum simulator
