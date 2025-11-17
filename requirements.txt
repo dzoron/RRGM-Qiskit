@@ -1,0 +1,27 @@
+# RRGM V4.1 Experimental Prediction Scripts
+# Requirements file for Python dependencies
+
+# Core numerical and scientific computing
+numpy>=1.19.0
+
+# Plotting and visualization
+matplotlib>=3.3.0
+
+# Optional: Advanced scientific computing (for future extensions)
+scipy>=1.5.0
+
+# Optional: Qiskit for quantum simulations (existing scripts)
+qiskit>=0.43.0
+qiskit-aer>=0.12.0
+
+# Optional: Jupyter for interactive notebooks (future work)
+jupyter>=1.0.0
+notebook>=6.4.0
+
+# Optional: Data handling and analysis
+pandas>=1.1.0
+
+# Development dependencies (optional)
+pytest>=6.2.0
+black>=21.0
+flake8>=3.9.0
