@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RRGM ES Threshold Interactive Suite</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 100%);
+            color: #e0e0e0;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px 15px 0 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: none;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: #a0a0c0;
+            margin-bottom: 10px;
+        }
+
+        .intro {
+            max-width: 900px;
+            margin: 10px auto 0;
+            color: #b0b0d0;
+            font-size: 0.95em;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0 20px;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            padding: 15px 25px;
+            background: transparent;
+            border: none;
+            color: #a0a0c0;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+        }
+
+        .tab-button:hover {
+            color: #8b9eff;
+            background: rgba(139, 158, 255, 0.1);
+        }
+
+        .tab-button.active {
+            color: #8b9eff;
+            border-bottom-color: #8b9eff;
+            background: rgba(139, 158, 255, 0.05);
+        }
+
+        .tab-content {
+            display: none;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0 0 15px 15px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        h2 {
+            color: #8b9eff;
+            margin-bottom: 15px;
+            font-size: 2em;
+        }
+
+        .description {
+            color: #a0a0c0;
+            margin-bottom: 25px;
+            font-size: 1em;
+            line-height: 1.6;
+        }
+
+        .controls {
+            margin: 25px 0;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .control-group {
+            margin: 15px 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #b0b0d0;
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            border: none;
+        }
+
+        .value-display {
+            font-size: 1.1em;
+            color: #8b9eff;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        canvas {
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 20px 0;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1em;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .info-box {
+            background: rgba(102, 126, 234, 0.1);
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-size: 0.95em;
+        }
+
+        .threshold-box {
+            background: rgba(255, 215, 0, 0.15);
+            border: 2px solid #ffd700;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-size: 0.95em;
+        }
+
+        .status-display {
+            background: rgba(139, 158, 255, 0.15);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .status-value {
+            font-size: 1.5em;
+            color: #8b9eff;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .box h3 {
+            color: #8b9eff;
+            margin-bottom: 10px;
+        }
+
+        .phase-point {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            position: absolute;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .phase-point:hover {
+            transform: scale(1.5);
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: #808090;
+            font-size: 0.9em;
+            margin-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .citation {
+            font-style: italic;
+            color: #a0a0c0;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .tab-content {
+                padding: 20px;
+            }
+
+            .tabs {
+                padding: 0 10px;
+            }
+
+            .tab-button {
+                padding: 12px 15px;
+                font-size: 0.9em;
+            }
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .energy-arrow {
+            text-align: center;
+            font-size: 2em;
+            color: #ffd700;
+            margin: 20px 0;
+        }
+
+        .equation {
+            background: rgba(100, 100, 200, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            text-align: center;
+            border: 1px solid rgba(139, 158, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌌 RRGM ES Threshold Interactive Suite</h1>
+            <div class="subtitle">Four Tools for Understanding the E<sub>S</sub> ≥ 1 Constraint</div>
+            <p class="intro">
+                Explore how the E<sub>S</sub> = 1 threshold unifies quantum mechanics, dark matter, measurement,
+                and classical observability. All four tools demonstrate different aspects of the same fundamental boundary.
+            </p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab(event, 'tool1')">
+                1. Quantum Threshold Crossing
+            </button>
+            <button class="tab-button" onclick="openTab(event, 'tool2')">
+                2. Dark Matter Formation
+            </button>
+            <button class="tab-button" onclick="openTab(event, 'tool3')">
+                3. ES Regime Phase Diagram
+            </button>
+            <button class="tab-button" onclick="openTab(event, 'tool4')">
+                4. Measurement Energy Cost
+            </button>
+        </div>
+
+        <!-- Tool 1: Quantum Threshold Crossing -->
+        <div id="tool1" class="tab-content active">
+            <h2>Tool 1: Quantum Threshold Crossing Simulator</h2>
+            <p class="description">
+                In RRGM, quantum superposition consists of multiple configurations with E<sub>S</sub> &lt; 1.
+                Measurement forces a threshold crossing to E<sub>S</sub> ≥ 1, producing classical collapse.
+                The "collapse" is not mysterious—it's the moment when structural energy crosses the observable threshold.
+            </p>
+
+            <div class="threshold-box">
+                <strong>Key Concept:</strong> Measurement injects E<sub>S</sub> from the detector (which has E<sub>S</sub> ≥ 1)
+                to force the particle over the E<sub>S</sub> = 1 threshold. Quantum collapse is threshold crossing.
+            </div>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label>
+                        Measurement Strength:
+                        <span class="value-display" id="measure-strength-value">0%</span>
+                    </label>
+                    <input type="range" id="measure-strength" min="0" max="100" step="1" value="0">
+                </div>
+                <button onclick="resetMeasurement()">↻ Reset to Superposition</button>
+            </div>
+
+            <div class="status-display">
+                <div><strong>Particle State:</strong></div>
+                <div class="status-value" id="quantum-state">Superposition (E<sub>S</sub> &lt; 1)</div>
+                <div id="es-values" style="margin-top: 10px; color: #a0a0c0;">
+                    E<sub>S</sub> values: <span id="es-list">0.7, 0.5, 0.3</span>
+                </div>
+            </div>
+
+            <canvas id="quantum-canvas" width="800" height="400"></canvas>
+
+            <div class="info-box">
+                <strong>What you're seeing:</strong> Multiple blurred positions represent configurations with different E<sub>S</sub> &lt; 1.
+                As measurement strength increases, the lowest E<sub>S</sub> configurations fade away, and remaining values increase.
+                When any configuration reaches E<sub>S</sub> ≥ 1, it becomes the single classical outcome—a sharp, localized position.
+            </div>
+        </div>
+
+        <!-- Tool 2: Dark Matter Formation -->
+        <div id="tool2" class="tab-content">
+            <h2>Tool 2: Dark Matter Formation Visualizer</h2>
+            <p class="description">
+                Dark matter has M<sub>I</sub> &gt; 0 (gravitational mass) but E<sub>S</sub> &lt; 1 (sub-threshold structure).
+                This explains why it gravitates but cannot radiate, cool, or form stars. Normal matter (E<sub>S</sub> ≥ 1)
+                can couple via EM, radiate energy, and collapse into dense structures. Dark matter stays diffuse.
+            </p>
+
+            <div class="threshold-box">
+                <strong>Key Insight:</strong> E<sub>S</sub> ≥ 1 matter can form stable EM-coupled structures (stars, galaxies).
+                E<sub>S</sub> &lt; 1 matter gravitates but cannot cool via radiation—it forms diffuse halos, not stars.
+            </div>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label>
+                        % of Matter with E<sub>S</sub> &lt; 1 (Dark Matter):
+                        <span class="value-display" id="dark-matter-percent">20%</span>
+                    </label>
+                    <input type="range" id="dark-matter-slider" min="0" max="100" step="5" value="20">
+                </div>
+                <button onclick="toggleGravity()" id="gravity-btn">▶ Start Gravitational Collapse</button>
+                <button onclick="resetGravity()">↻ Reset</button>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #4ecdc4;"></div>
+                    <span>Normal Matter (E<sub>S</sub> ≥ 1) - Can radiate/cool</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ff6b6b;"></div>
+                    <span>Dark Matter (E<sub>S</sub> &lt; 1) - Cannot radiate</span>
+                </div>
+            </div>
+
+            <canvas id="gravity-canvas" width="800" height="500"></canvas>
+
+            <div class="grid-2" style="margin-top: 20px;">
+                <div class="box">
+                    <h3>Normal Matter (E<sub>S</sub> ≥ 1)</h3>
+                    <p><strong>Count:</strong> <span id="normal-count">80</span></p>
+                    <p><strong>Behavior:</strong> Gravitates + Radiates → Dense clumps</p>
+                    <p><strong>Result:</strong> Forms stars, galaxies</p>
+                </div>
+                <div class="box">
+                    <h3>Dark Matter (E<sub>S</sub> &lt; 1)</h3>
+                    <p><strong>Count:</strong> <span id="dark-count">20</span></p>
+                    <p><strong>Behavior:</strong> Gravitates only → Stays diffuse</p>
+                    <p><strong>Result:</strong> Forms halos, no stars</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tool 3: Phase Diagram -->
+        <div id="tool3" class="tab-content">
+            <h2>Tool 3: E<sub>S</sub> Regime Phase Diagram</h2>
+            <p class="description">
+                All physical regimes can be mapped on a single (M<sub>I</sub>, E<sub>S</sub>) diagram.
+                The E<sub>S</sub> = 1 threshold divides quantum/dark matter from classical observables.
+                Click or hover over any point to explore different configurations.
+            </p>
+
+            <div class="threshold-box">
+                <strong>Universal Map:</strong> One threshold (E<sub>S</sub> = 1) unifies all physics regimes.
+                Photons, atoms, dark matter, and black holes are just different points on this manifold.
+            </div>
+
+            <canvas id="phase-canvas" width="900" height="600"></canvas>
+
+            <div class="status-display">
+                <div><strong>Selected Point:</strong></div>
+                <div class="status-value" id="phase-info">Click anywhere on the diagram</div>
+                <div id="phase-details" style="margin-top: 10px; color: #a0a0c0;"></div>
+            </div>
+
+            <div class="info-box">
+                <strong>Regions:</strong><br>
+                • <strong>Light Blue (E<sub>S</sub> &lt; 1):</strong> Quantum mechanics, dark matter, superposition<br>
+                • <strong>Green (E<sub>S</sub> ≥ 1):</strong> Classical observable matter and radiation<br>
+                • <strong>Dark Red Corner (M<sub>I</sub> → ∞, E<sub>S</sub> → 1):</strong> Archive limit (black holes)<br>
+                • <strong>Marked Examples:</strong> Photon, Atom, Dark Matter, Black Hole
+            </div>
+        </div>
+
+        <!-- Tool 4: Measurement Energy Cost -->
+        <div id="tool4" class="tab-content">
+            <h2>Tool 4: Measurement Energy Cost Visualizer</h2>
+            <p class="description">
+                Measurement affects quantum systems because it requires E<sub>S</sub> transfer.
+                The detector (E<sub>S</sub> ≥ 1) must transfer structural energy to push the particle
+                over the E<sub>S</sub> = 1 threshold. Total E<sub>S</sub> is conserved during measurement.
+            </p>
+
+            <div class="threshold-box">
+                <strong>Why Measurement Has a Cost:</strong> Detectors must have E<sub>S</sub> ≥ 1 to write classical records.
+                Measuring an E<sub>S</sub> &lt; 1 particle requires transferring E<sub>S</sub> from detector to particle
+                until it crosses the threshold. This is the physical origin of the observer effect.
+            </div>
+
+            <div class="controls">
+                <button onclick="performMeasurement()" id="measure-btn">🔬 Perform Measurement</button>
+                <button onclick="resetMeasurementCost()">↻ Reset</button>
+            </div>
+
+            <div class="grid-2">
+                <div class="box">
+                    <h3>Quantum Particle</h3>
+                    <p><strong>M<sub>I</sub>:</strong> 1.0 (conserved)</p>
+                    <p><strong>E<sub>S</sub>:</strong> <span id="particle-es" style="color: #ff6b6b; font-weight: bold;">0.7</span></p>
+                    <p id="particle-status" style="color: #ff6b6b;">Sub-threshold (quantum)</p>
+                </div>
+                <div class="box">
+                    <h3>Classical Detector</h3>
+                    <p><strong>M<sub>I</sub>:</strong> 10.0 (conserved)</p>
+                    <p><strong>E<sub>S</sub>:</strong> <span id="detector-es" style="color: #4ecdc4; font-weight: bold;">5.0</span></p>
+                    <p id="detector-status" style="color: #4ecdc4;">Classical observable</p>
+                </div>
+            </div>
+
+            <div id="measurement-flow" style="display: none;">
+                <div class="energy-arrow">
+                    ↓ E<sub>S</sub> Transfer ↓
+                </div>
+                <div class="status-display">
+                    <div><strong>After Measurement:</strong></div>
+                    <div style="margin-top: 15px;">
+                        Particle: E<sub>S</sub> = <span style="color: #4ecdc4; font-weight: bold;">1.1</span> (crossed threshold! ✓)<br>
+                        Detector: E<sub>S</sub> = <span style="color: #4ecdc4; font-weight: bold;">4.6</span> (gave up E<sub>S</sub>)
+                    </div>
+                </div>
+            </div>
+
+            <div class="equation">
+                E<sub>S</sub>(particle) + E<sub>S</sub>(detector) = <span id="total-es">5.7</span> (conserved)
+            </div>
+
+            <canvas id="measurement-canvas" width="800" height="400"></canvas>
+
+            <div class="info-box">
+                <strong>Conservation Law:</strong> E<sub>S</sub> is transferred, not created. Before measurement: 0.7 + 5.0 = 5.7.
+                After measurement: 1.1 + 4.6 = 5.7. The detector pays the energy cost to force the particle over threshold.
+                This explains why "observation affects the system"—it's not mystical, it's energy transfer.
+            </div>
+        </div>
+
+        <footer>
+            <div class="citation">
+                Based on the RRGM E<sub>S</sub> ≥ 1 Threshold Constraint
+            </div>
+            <div style="margin-top: 10px;">
+                Rozon Recursive Gravity Model (RRGM) • Daniel Rozon & Luna (Digital Intelligence) • 2025
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // ============================================
+        // Tab Navigation
+        // ============================================
+        function openTab(evt, toolName) {
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+
+            const tabButtons = document.getElementsByClassName('tab-button');
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove('active');
+            }
+
+            document.getElementById(toolName).classList.add('active');
+            evt.currentTarget.classList.add('active');
+        }
+
+        // ============================================
+        // Tool 1: Quantum Threshold Crossing
+        // ============================================
+        const quantumCanvas = document.getElementById('quantum-canvas');
+        const quantumCtx = quantumCanvas.getContext('2d');
+        const measureStrengthSlider = document.getElementById('measure-strength');
+        const measureStrengthValue = document.getElementById('measure-strength-value');
+        const quantumState = document.getElementById('quantum-state');
+        const esList = document.getElementById('es-list');
+
+        let configurations = [
+            { x: 300, es: 0.7, opacity: 1.0 },
+            { x: 400, es: 0.5, opacity: 1.0 },
+            { x: 500, es: 0.3, opacity: 1.0 }
+        ];
+        let collapsed = false;
+        let collapsedX = 0;
+
+        measureStrengthSlider.addEventListener('input', updateQuantumMeasurement);
+
+        function updateQuantumMeasurement() {
+            const strength = parseFloat(measureStrengthSlider.value);
+            measureStrengthValue.textContent = strength + '%';
+
+            // Calculate ES boost from measurement
+            const boost = strength / 100 * 0.5; // Max boost of 0.5
+
+            // Update configurations
+            const newConfigs = configurations.map(c => {
+                const newEs = c.es + boost;
+                const opacity = (c.es > 0.4) ? 1.0 : Math.max(0, 1.0 - strength / 50);
+                return { ...c, es: newEs, opacity };
+            });
+
+            // Check for collapse
+            const anyOverThreshold = newConfigs.some(c => c.es >= 1.0 && c.opacity > 0.5);
+
+            if (anyOverThreshold && !collapsed) {
+                // Find highest ES that crossed
+                const winner = newConfigs.filter(c => c.opacity > 0.5).reduce((max, c) => c.es > max.es ? c : max);
+                collapsedX = winner.x;
+                collapsed = true;
+                quantumState.innerHTML = 'Collapsed! (E<sub>S</sub> ≥ 1)';
+                esList.textContent = winner.es.toFixed(2) + ' → Classical Record';
+            } else if (!anyOverThreshold) {
+                collapsed = false;
+                const visibleConfigs = newConfigs.filter(c => c.opacity > 0.1);
+                const esValues = visibleConfigs.map(c => c.es.toFixed(2)).join(', ');
+                quantumState.innerHTML = 'Superposition (E<sub>S</sub> &lt; 1)';
+                esList.textContent = esValues;
+            }
+
+            configurations = newConfigs;
+            drawQuantumState();
+        }
+
+        function drawQuantumState() {
+            const w = quantumCanvas.width;
+            const h = quantumCanvas.height;
+            quantumCtx.clearRect(0, 0, w, h);
+
+            // Draw threshold line
+            quantumCtx.strokeStyle = '#ffd700';
+            quantumCtx.lineWidth = 2;
+            quantumCtx.setLineDash([5, 5]);
+            const thresholdY = h / 2;
+            quantumCtx.beginPath();
+            quantumCtx.moveTo(0, thresholdY);
+            quantumCtx.lineTo(w, thresholdY);
+            quantumCtx.stroke();
+            quantumCtx.setLineDash([]);
+
+            quantumCtx.fillStyle = '#ffd700';
+            quantumCtx.font = '14px Arial';
+            quantumCtx.fillText('E_S = 1 Threshold', 10, thresholdY - 10);
+
+            if (collapsed) {
+                // Draw sharp classical position
+                quantumCtx.fillStyle = '#4ecdc4';
+                quantumCtx.beginPath();
+                quantumCtx.arc(collapsedX, h/2, 15, 0, Math.PI * 2);
+                quantumCtx.fill();
+
+                // Glow
+                const gradient = quantumCtx.createRadialGradient(collapsedX, h/2, 0, collapsedX, h/2, 50);
+                gradient.addColorStop(0, 'rgba(78, 205, 196, 0.6)');
+                gradient.addColorStop(1, 'rgba(78, 205, 196, 0)');
+                quantumCtx.fillStyle = gradient;
+                quantumCtx.beginPath();
+                quantumCtx.arc(collapsedX, h/2, 50, 0, Math.PI * 2);
+                quantumCtx.fill();
+
+                quantumCtx.fillStyle = '#4ecdc4';
+                quantumCtx.font = 'bold 16px Arial';
+                quantumCtx.fillText('Classical Position', collapsedX - 60, h/2 + 80);
+            } else {
+                // Draw blurred superposition
+                configurations.forEach(config => {
+                    if (config.opacity > 0.1) {
+                        const radius = 40;
+                        const gradient = quantumCtx.createRadialGradient(config.x, h/2, 0, config.x, h/2, radius);
+                        gradient.addColorStop(0, `rgba(139, 158, 255, ${config.opacity * 0.6})`);
+                        gradient.addColorStop(1, 'rgba(139, 158, 255, 0)');
+                        quantumCtx.fillStyle = gradient;
+                        quantumCtx.beginPath();
+                        quantumCtx.arc(config.x, h/2, radius, 0, Math.PI * 2);
+                        quantumCtx.fill();
+
+                        // Label ES
+                        quantumCtx.fillStyle = `rgba(139, 158, 255, ${config.opacity})`;
+                        quantumCtx.font = '12px Arial';
+                        quantumCtx.fillText(`E_S=${config.es.toFixed(2)}`, config.x - 25, h/2 + 60);
+                    }
+                });
+            }
+        }
+
+        function resetMeasurement() {
+            configurations = [
+                { x: 300, es: 0.7, opacity: 1.0 },
+                { x: 400, es: 0.5, opacity: 1.0 },
+                { x: 500, es: 0.3, opacity: 1.0 }
+            ];
+            collapsed = false;
+            measureStrengthSlider.value = 0;
+            measureStrengthValue.textContent = '0%';
+            quantumState.innerHTML = 'Superposition (E<sub>S</sub> &lt; 1)';
+            esList.textContent = '0.7, 0.5, 0.3';
+            drawQuantumState();
+        }
+
+        drawQuantumState();
+
+        // ============================================
+        // Tool 2: Dark Matter Formation
+        // ============================================
+        const gravityCanvas = document.getElementById('gravity-canvas');
+        const gravityCtx = gravityCanvas.getContext('2d');
+        const darkMatterSlider = document.getElementById('dark-matter-slider');
+        const darkMatterPercent = document.getElementById('dark-matter-percent');
+
+        let particles = [];
+        let gravityRunning = false;
+        let gravityTime = 0;
+        const centerX = gravityCanvas.width / 2;
+        const centerY = gravityCanvas.height / 2;
+
+        darkMatterSlider.addEventListener('input', updateDarkMatterPercent);
+
+        function updateDarkMatterPercent() {
+            const percent = parseFloat(darkMatterSlider.value);
+            darkMatterPercent.textContent = percent + '%';
+
+            const darkCount = Math.round(100 * percent / 100);
+            const normalCount = 100 - darkCount;
+
+            document.getElementById('dark-count').textContent = darkCount;
+            document.getElementById('normal-count').textContent = normalCount;
+
+            if (!gravityRunning) {
+                initParticles();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const darkCount = Math.round(100 * parseFloat(darkMatterSlider.value) / 100);
+
+            for (let i = 0; i < 100; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 150 + Math.random() * 100;
+                particles.push({
+                    x: centerX + Math.cos(angle) * radius,
+                    y: centerY + Math.sin(angle) * radius,
+                    vx: 0,
+                    vy: 0,
+                    isDark: i < darkCount,
+                    mi: 1.0,
+                    es: i < darkCount ? 0.6 : 2.0
+                });
+            }
+            gravityTime = 0;
+        }
+
+        function toggleGravity() {
+            gravityRunning = !gravityRunning;
+            document.getElementById('gravity-btn').textContent = gravityRunning ? '⏸ Pause' : '▶ Start Gravitational Collapse';
+            if (gravityRunning) {
+                animateGravity();
+            }
+        }
+
+        function resetGravity() {
+            gravityRunning = false;
+            document.getElementById('gravity-btn').textContent = '▶ Start Gravitational Collapse';
+            initParticles();
+            drawGravity();
+        }
+
+        function animateGravity() {
+            if (!gravityRunning) return;
+
+            gravityTime += 0.1;
+
+            // Apply gravity
+            particles.forEach(p => {
+                const dx = centerX - p.x;
+                const dy = centerY - p.y;
+                const dist = Math.sqrt(dx * dx + dy * dy) + 1;
+                const force = 0.5 / (dist * dist);
+
+                p.vx += dx / dist * force;
+                p.vy += dy / dist * force;
+
+                // Normal matter can radiate/cool (stronger pull)
+                if (!p.isDark) {
+                    p.vx *= 0.98; // Damping from radiation
+                    p.vy *= 0.98;
+                }
+
+                p.x += p.vx;
+                p.y += p.vy;
+            });
+
+            drawGravity();
+            requestAnimationFrame(animateGravity);
+        }
+
+        function drawGravity() {
+            const w = gravityCanvas.width;
+            const h = gravityCanvas.height;
+            gravityCtx.clearRect(0, 0, w, h);
+
+            // Draw center
+            gravityCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            gravityCtx.lineWidth = 1;
+            gravityCtx.beginPath();
+            gravityCtx.arc(centerX, centerY, 5, 0, Math.PI * 2);
+            gravityCtx.stroke();
+
+            // Draw particles
+            particles.forEach(p => {
+                gravityCtx.fillStyle = p.isDark ? 'rgba(255, 107, 107, 0.8)' : 'rgba(78, 205, 196, 0.8)';
+                gravityCtx.beginPath();
+                gravityCtx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                gravityCtx.fill();
+            });
+
+            // Labels
+            gravityCtx.fillStyle = '#e0e0e0';
+            gravityCtx.font = 'bold 14px Arial';
+            gravityCtx.fillText('Center of Gravitational Potential', centerX - 100, 30);
+        }
+
+        initParticles();
+        drawGravity();
+
+        // ============================================
+        // Tool 3: Phase Diagram
+        // ============================================
+        const phaseCanvas = document.getElementById('phase-canvas');
+        const phaseCtx = phaseCanvas.getContext('2d');
+        const phaseInfo = document.getElementById('phase-info');
+        const phaseDetails = document.getElementById('phase-details');
+
+        const examples = [
+            { name: 'Photon', mi: 0.01, es: 5, color: '#ffeb3b' },
+            { name: 'Atom', mi: 1, es: 3, color: '#4ecdc4' },
+            { name: 'Dark Matter', mi: 1, es: 0.5, color: '#ff6b6b' },
+            { name: 'Black Hole', mi: 100, es: 1, color: '#bb8fce' }
+        ];
+
+        phaseCanvas.addEventListener('click', handlePhaseClick);
+        phaseCanvas.addEventListener('mousemove', handlePhaseHover);
+
+        function drawPhaseDiagram() {
+            const w = phaseCanvas.width;
+            const h = phaseCanvas.height;
+            const margin = { left: 80, right: 40, top: 40, bottom: 80 };
+
+            phaseCtx.clearRect(0, 0, w, h);
+
+            // Draw regions
+            const plotW = w - margin.left - margin.right;
+            const plotH = h - margin.top - margin.bottom;
+
+            // ES < 1 region (quantum/dark)
+            phaseCtx.fillStyle = 'rgba(100, 150, 255, 0.2)';
+            const threshold = margin.top + plotH - (1.0 / 10) * plotH;
+            phaseCtx.fillRect(margin.left, threshold, plotW, h - margin.bottom - threshold);
+
+            // ES >= 1 region (classical)
+            phaseCtx.fillStyle = 'rgba(78, 205, 196, 0.2)';
+            phaseCtx.fillRect(margin.left, margin.top, plotW, threshold - margin.top);
+
+            // Threshold line
+            phaseCtx.strokeStyle = '#ffd700';
+            phaseCtx.lineWidth = 3;
+            phaseCtx.setLineDash([10, 5]);
+            phaseCtx.beginPath();
+            phaseCtx.moveTo(margin.left, threshold);
+            phaseCtx.lineTo(w - margin.right, threshold);
+            phaseCtx.stroke();
+            phaseCtx.setLineDash([]);
+
+            // Axes
+            phaseCtx.strokeStyle = '#e0e0e0';
+            phaseCtx.lineWidth = 2;
+            phaseCtx.beginPath();
+            phaseCtx.moveTo(margin.left, margin.top);
+            phaseCtx.lineTo(margin.left, h - margin.bottom);
+            phaseCtx.lineTo(w - margin.right, h - margin.bottom);
+            phaseCtx.stroke();
+
+            // Labels
+            phaseCtx.fillStyle = '#e0e0e0';
+            phaseCtx.font = 'bold 16px Arial';
+            phaseCtx.save();
+            phaseCtx.translate(20, h / 2);
+            phaseCtx.rotate(-Math.PI / 2);
+            phaseCtx.fillText('E_S (Structure)', 0, 0);
+            phaseCtx.restore();
+
+            phaseCtx.fillText('M_I (Identity, log scale)', w / 2 - 80, h - 20);
+
+            // Y-axis labels (ES)
+            phaseCtx.font = '12px Arial';
+            for (let es = 0; es <= 10; es += 2) {
+                const y = margin.top + plotH - (es / 10) * plotH;
+                phaseCtx.fillText(es.toFixed(0), margin.left - 30, y + 5);
+                phaseCtx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                phaseCtx.beginPath();
+                phaseCtx.moveTo(margin.left, y);
+                phaseCtx.lineTo(w - margin.right, y);
+                phaseCtx.stroke();
+            }
+
+            // X-axis labels (MI, log scale)
+            const miValues = [0.01, 0.1, 1, 10, 100];
+            miValues.forEach((mi, i) => {
+                const x = margin.left + (i / (miValues.length - 1)) * plotW;
+                phaseCtx.fillStyle = '#e0e0e0';
+                phaseCtx.fillText(mi.toString(), x - 15, h - margin.bottom + 20);
+                phaseCtx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                phaseCtx.beginPath();
+                phaseCtx.moveTo(x, margin.top);
+                phaseCtx.lineTo(x, h - margin.bottom);
+                phaseCtx.stroke();
+            });
+
+            // Region labels
+            phaseCtx.fillStyle = '#8b9eff';
+            phaseCtx.font = 'bold 14px Arial';
+            phaseCtx.fillText('Quantum/Dark Matter (E_S < 1)', margin.left + 10, h - margin.bottom - 20);
+            phaseCtx.fillText('Classical Observable (E_S ≥ 1)', margin.left + 10, margin.top + 20);
+            phaseCtx.fillText('E_S = 1 Observable Threshold', w / 2 - 80, threshold - 10);
+
+            // Draw example points
+            examples.forEach(ex => {
+                const x = miToX(ex.mi, margin.left, plotW);
+                const y = esToY(ex.es, margin.top, plotH);
+
+                phaseCtx.fillStyle = ex.color;
+                phaseCtx.beginPath();
+                phaseCtx.arc(x, y, 8, 0, Math.PI * 2);
+                phaseCtx.fill();
+
+                phaseCtx.strokeStyle = '#fff';
+                phaseCtx.lineWidth = 2;
+                phaseCtx.stroke();
+
+                phaseCtx.fillStyle = '#e0e0e0';
+                phaseCtx.font = 'bold 12px Arial';
+                phaseCtx.fillText(ex.name, x + 12, y + 4);
+            });
+        }
+
+        function miToX(mi, left, plotW) {
+            const logMi = Math.log10(Math.max(mi, 0.01));
+            const logMin = Math.log10(0.01);
+            const logMax = Math.log10(100);
+            return left + ((logMi - logMin) / (logMax - logMin)) * plotW;
+        }
+
+        function esToY(es, top, plotH) {
+            return top + plotH - (es / 10) * plotH;
+        }
+
+        function xToMi(x, left, plotW) {
+            const logMin = Math.log10(0.01);
+            const logMax = Math.log10(100);
+            const ratio = (x - left) / plotW;
+            const logMi = logMin + ratio * (logMax - logMin);
+            return Math.pow(10, logMi);
+        }
+
+        function yToEs(y, top, plotH) {
+            return (1 - (y - top) / plotH) * 10;
+        }
+
+        function handlePhaseClick(e) {
+            const rect = phaseCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const margin = { left: 80, right: 40, top: 40, bottom: 80 };
+            const plotW = phaseCanvas.width - margin.left - margin.right;
+            const plotH = phaseCanvas.height - margin.top - margin.bottom;
+
+            if (x >= margin.left && x <= phaseCanvas.width - margin.right &&
+                y >= margin.top && y <= phaseCanvas.height - margin.bottom) {
+
+                const mi = xToMi(x, margin.left, plotW);
+                const es = yToEs(y, margin.top, plotH);
+                const energy = mi * es;
+
+                let type = '';
+                if (es < 1) {
+                    type = 'Quantum/Dark Matter Regime';
+                } else if (mi < 0.1 && es > 1) {
+                    type = 'Photon-like (low M_I, moderate E_S)';
+                } else if (mi > 10 && es < 2) {
+                    type = 'Archive-like (high M_I, low E_S)';
+                } else {
+                    type = 'Classical Matter';
+                }
+
+                phaseInfo.textContent = type;
+                phaseDetails.innerHTML = `M<sub>I</sub> = ${mi.toFixed(2)}, E<sub>S</sub> = ${es.toFixed(2)}, E = ${energy.toFixed(2)}`;
+            }
+        }
+
+        function handlePhaseHover(e) {
+            const rect = phaseCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const margin = { left: 80, right: 40, top: 40, bottom: 80 };
+
+            examples.forEach(ex => {
+                const exX = miToX(ex.mi, margin.left, phaseCanvas.width - margin.left - margin.right);
+                const exY = esToY(ex.es, margin.top, phaseCanvas.height - margin.top - margin.bottom);
+                const dist = Math.sqrt((x - exX) ** 2 + (y - exY) ** 2);
+
+                if (dist < 15) {
+                    const energy = ex.mi * ex.es;
+                    phaseInfo.textContent = ex.name;
+                    phaseDetails.innerHTML = `M<sub>I</sub> = ${ex.mi}, E<sub>S</sub> = ${ex.es}, E = ${energy.toFixed(2)}`;
+                }
+            });
+        }
+
+        drawPhaseDiagram();
+
+        // ============================================
+        // Tool 4: Measurement Energy Cost
+        // ============================================
+        const measurementCanvas = document.getElementById('measurement-canvas');
+        const measurementCtx = measurementCanvas.getContext('2d');
+
+        let particleEsValue = 0.7;
+        let detectorEsValue = 5.0;
+        let measured = false;
+
+        function performMeasurement() {
+            if (measured) return;
+
+            measured = true;
+
+            // Calculate ES transfer needed
+            const needed = 1.0 - particleEsValue + 0.1; // Get to 1.1
+            particleEsValue += needed;
+            detectorEsValue -= needed;
+
+            // Update displays
+            document.getElementById('particle-es').textContent = particleEsValue.toFixed(2);
+            document.getElementById('detector-es').textContent = detectorEsValue.toFixed(2);
+            document.getElementById('particle-status').textContent = 'Crossed threshold! (classical)';
+            document.getElementById('particle-status').style.color = '#4ecdc4';
+            document.getElementById('detector-status').textContent = 'Transferred E_S to particle';
+
+            document.getElementById('measurement-flow').style.display = 'block';
+            document.getElementById('measure-btn').disabled = true;
+            document.getElementById('measure-btn').style.opacity = '0.5';
+
+            drawMeasurementCost();
+        }
+
+        function resetMeasurementCost() {
+            measured = false;
+            particleEsValue = 0.7;
+            detectorEsValue = 5.0;
+
+            document.getElementById('particle-es').textContent = '0.7';
+            document.getElementById('detector-es').textContent = '5.0';
+            document.getElementById('particle-status').textContent = 'Sub-threshold (quantum)';
+            document.getElementById('particle-status').style.color = '#ff6b6b';
+            document.getElementById('detector-status').textContent = 'Classical observable';
+
+            document.getElementById('measurement-flow').style.display = 'none';
+            document.getElementById('measure-btn').disabled = false;
+            document.getElementById('measure-btn').style.opacity = '1';
+
+            drawMeasurementCost();
+        }
+
+        function drawMeasurementCost() {
+            const w = measurementCanvas.width;
+            const h = measurementCanvas.height;
+            measurementCtx.clearRect(0, 0, w, h);
+
+            // Draw threshold line
+            measurementCtx.strokeStyle = '#ffd700';
+            measurementCtx.lineWidth = 2;
+            measurementCtx.setLineDash([5, 5]);
+            measurementCtx.beginPath();
+            measurementCtx.moveTo(0, h/2);
+            measurementCtx.lineTo(w, h/2);
+            measurementCtx.stroke();
+            measurementCtx.setLineDash([]);
+
+            measurementCtx.fillStyle = '#ffd700';
+            measurementCtx.font = '14px Arial';
+            measurementCtx.fillText('E_S = 1 Threshold', 10, h/2 - 10);
+
+            // Draw particle
+            const particleX = 250;
+            const particleY = measured ? h/2 - 60 : h/2 + 100;
+            const particleColor = measured ? '#4ecdc4' : '#ff6b6b';
+
+            measurementCtx.fillStyle = particleColor;
+            measurementCtx.beginPath();
+            measurementCtx.arc(particleX, particleY, 20, 0, Math.PI * 2);
+            measurementCtx.fill();
+
+            measurementCtx.fillStyle = '#fff';
+            measurementCtx.font = 'bold 14px Arial';
+            measurementCtx.fillText('Particle', particleX - 25, particleY + 50);
+            measurementCtx.fillText(`E_S = ${particleEsValue.toFixed(2)}`, particleX - 30, particleY + 70);
+
+            // Draw detector
+            const detectorX = 550;
+            const detectorY = h/2 - 60;
+
+            measurementCtx.fillStyle = '#4ecdc4';
+            measurementCtx.fillRect(detectorX - 30, detectorY - 30, 60, 60);
+
+            measurementCtx.fillStyle = '#fff';
+            measurementCtx.font = 'bold 14px Arial';
+            measurementCtx.fillText('Detector', detectorX - 25, detectorY + 50);
+            measurementCtx.fillText(`E_S = ${detectorEsValue.toFixed(2)}`, detectorX - 30, detectorY + 70);
+
+            // Draw energy transfer arrow if measured
+            if (measured) {
+                measurementCtx.strokeStyle = '#ffd700';
+                measurementCtx.lineWidth = 3;
+                measurementCtx.fillStyle = '#ffd700';
+
+                const arrowStartX = detectorX - 40;
+                const arrowEndX = particleX + 30;
+                const arrowY = h/2;
+
+                measurementCtx.beginPath();
+                measurementCtx.moveTo(arrowStartX, arrowY);
+                measurementCtx.lineTo(arrowEndX, arrowY);
+                measurementCtx.stroke();
+
+                // Arrow head
+                measurementCtx.beginPath();
+                measurementCtx.moveTo(arrowEndX, arrowY);
+                measurementCtx.lineTo(arrowEndX - 10, arrowY - 10);
+                measurementCtx.lineTo(arrowEndX - 10, arrowY + 10);
+                measurementCtx.closePath();
+                measurementCtx.fill();
+
+                measurementCtx.font = '12px Arial';
+                measurementCtx.fillText('E_S transfer', (arrowStartX + arrowEndX) / 2 - 30, arrowY - 10);
+            }
+        }
+
+        drawMeasurementCost();
+    </script>
+</body>
+</html>
