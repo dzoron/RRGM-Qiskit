@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RRGM Interactive Simulator v2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 100%);
+            color: #e0e0e0;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: #a0a0c0;
+            margin-bottom: 15px;
+        }
+
+        .intro {
+            max-width: 800px;
+            margin: 0 auto;
+            color: #b0b0d0;
+            font-size: 0.95em;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .section h2 {
+            color: #8b9eff;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+
+        .section-description {
+            color: #a0a0c0;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .formula {
+            background: rgba(100, 100, 200, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.3em;
+            text-align: center;
+            border: 1px solid rgba(139, 158, 255, 0.3);
+        }
+
+        .controls {
+            margin: 20px 0;
+        }
+
+        .control-group {
+            margin: 20px 0;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #b0b0d0;
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            border: none;
+        }
+
+        .value-display {
+            font-size: 1.2em;
+            color: #8b9eff;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .threshold-marker {
+            position: absolute;
+            bottom: 35px;
+            height: 30px;
+            width: 2px;
+            background: #ffd700;
+            pointer-events: none;
+        }
+
+        .threshold-label {
+            position: absolute;
+            bottom: 70px;
+            font-size: 0.85em;
+            color: #ffd700;
+            white-space: nowrap;
+            transform: translateX(-50%);
+            font-weight: bold;
+        }
+
+        canvas {
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .visualization {
+            margin: 20px 0;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1em;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .comparison-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .comparison-box h3 {
+            margin-bottom: 15px;
+            color: #8b9eff;
+        }
+
+        .spectrum-bar {
+            height: 60px;
+            background: linear-gradient(90deg,
+                #ff6b6b 0%,
+                #4ecdc4 25%,
+                #45b7d1 50%,
+                #f7dc6f 75%,
+                #bb8fce 100%);
+            border-radius: 10px;
+            position: relative;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .spectrum-marker {
+            position: absolute;
+            top: -10px;
+            width: 4px;
+            height: 80px;
+            background: white;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            transition: left 0.3s ease;
+        }
+
+        .spectrum-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #a0a0c0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #808090;
+            font-size: 0.9em;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 40px;
+        }
+
+        .citation {
+            font-style: italic;
+            color: #a0a0c0;
+            margin-top: 10px;
+        }
+
+        .info-box {
+            background: rgba(102, 126, 234, 0.1);
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .warning-box {
+            background: rgba(255, 215, 0, 0.1);
+            border-left: 4px solid #ffd700;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .threshold-box {
+            background: rgba(255, 215, 0, 0.15);
+            border: 2px solid #ffd700;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .result-box {
+            background: rgba(102, 126, 234, 0.15);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .result-value {
+            font-size: 2em;
+            color: #8b9eff;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .component-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .component {
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 1.2em;
+            transition: opacity 0.3s ease;
+        }
+
+        .component.sub-threshold {
+            opacity: 0.4;
+            border-style: dashed !important;
+        }
+
+        .identity-comp {
+            background: rgba(255, 107, 107, 0.2);
+            border: 2px solid #ff6b6b;
+        }
+
+        .structure-comp {
+            background: rgba(78, 205, 196, 0.2);
+            border: 2px solid #4ecdc4;
+        }
+
+        .operator {
+            font-size: 1.5em;
+            color: #8b9eff;
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .regime-label {
+            font-size: 0.9em;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        .regime-quantum {
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px dashed #ff6b6b;
+            color: #ff6b6b;
+        }
+
+        .regime-classical {
+            background: rgba(78, 205, 196, 0.2);
+            border: 1px solid #4ecdc4;
+            color: #4ecdc4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌌 RRGM Interactive Simulator v2</h1>
+            <div class="subtitle">Rozon Recursive Gravity Model</div>
+            <p class="intro">
+                Explore the fundamental relationship between Identity (M<sub>I</sub>) and Structure (E<sub>S</sub>),
+                where reality emerges through recursive selection from potential (D<sub>0</sub>)
+                to realized records (D<sub>0+1</sub>) via the universal protocol Ω(D<sub>0</sub>).
+            </p>
+        </header>
+
+        <!-- Section 1: MI × ES Coupling -->
+        <section class="section">
+            <h2>1. M<sub>I</sub> × E<sub>S</sub> Coupling Visualizer</h2>
+            <p class="section-description">
+                The bare-root law of RRGM states that realized energy is the product of identity
+                (conserved anchor, "information mass") and structure (radiatable pattern).
+                Adjust each component and observe how total energy emerges from their coupling.
+            </p>
+
+            <div class="formula">
+                E = M<sub>I</sub> × E<sub>S</sub>
+            </div>
+
+            <div class="threshold-box">
+                <strong>⚠ Critical Constraint: E<sub>S</sub> ≥ 1 for Classical Observability</strong><br>
+                • <strong>E<sub>S</sub> = 1:</strong> Minimal existence threshold (archives, black holes with no disk)<br>
+                • <strong>E<sub>S</sub> &gt; 1:</strong> Classical matter with radiatable structure<br>
+                • <strong>0 &lt; E<sub>S</sub> &lt; 1:</strong> Sub-threshold regime (quantum mechanics, dark matter) — exists but cannot write stable observable records<br>
+                • <strong>E<sub>S</sub> = 0:</strong> Unphysical/impossible (pure absence, no coupling possible)
+            </div>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label for="mi-slider">Identity (M<sub>I</sub>): <span id="mi-value" class="value-display">1.00</span></label>
+                    <input type="range" id="mi-slider" min="0.01" max="10" step="0.01" value="1">
+                </div>
+
+                <div class="control-group">
+                    <label for="es-slider">
+                        Structure (E<sub>S</sub>): <span id="es-value" class="value-display">1.00</span>
+                        <span id="es-regime-label" class="regime-label regime-classical">Classical Observable</span>
+                    </label>
+                    <input type="range" id="es-slider" min="0.01" max="10" step="0.01" value="1">
+                    <div class="threshold-marker" id="es-threshold-marker"></div>
+                    <div class="threshold-label" id="es-threshold-label">E<sub>S</sub> = 1<br>Observable Threshold</div>
+                </div>
+            </div>
+
+            <div class="component-display">
+                <div class="component identity-comp" id="mi-comp">
+                    M<sub>I</sub> = <span id="mi-display">1.00</span>
+                </div>
+                <span class="operator">×</span>
+                <div class="component structure-comp" id="es-comp">
+                    E<sub>S</sub> = <span id="es-display">1.00</span>
+                </div>
+                <span class="operator">=</span>
+                <div class="component" id="energy-comp" style="background: rgba(139, 158, 255, 0.2); border: 2px solid #8b9eff;">
+                    E = <span id="energy-display">1.00</span>
+                </div>
+            </div>
+
+            <div class="visualization">
+                <canvas id="coupling-canvas" width="800" height="400"></canvas>
+            </div>
+
+            <div class="info-box">
+                <strong>Key Insight:</strong> When E<sub>S</sub> &lt; 1, the configuration enters the quantum/dark matter regime.
+                It has identity (M<sub>I</sub>) and carries gravitational effects, but cannot form stable classical records.
+                Measurement tools (which themselves have E<sub>S</sub> ≥ 1) struggle to interact with E<sub>S</sub> &lt; 1 targets—
+                the closer to 0, the harder to measure.
+            </div>
+        </section>
+
+        <!-- Section 2: Spectrum -->
+        <section class="section">
+            <h2>2. Photon → Matter → Archive Spectrum</h2>
+            <p class="section-description">
+                RRGM treats photons, ordinary matter, and black-hole archives as different operating points
+                on a single (M<sub>I</sub>, E<sub>S</sub>) manifold. Move along the continuum to see how
+                identity and structure trade off across physical regimes. <strong>Note the E<sub>S</sub> = 1 threshold.</strong>
+            </p>
+
+            <div class="control-group">
+                <label for="spectrum-slider">Position on Continuum: <span id="regime-label" class="value-display">Matter Band</span></label>
+                <input type="range" id="spectrum-slider" min="0" max="100" step="1" value="50">
+            </div>
+
+            <div class="spectrum-bar">
+                <div class="spectrum-marker" id="spectrum-marker"></div>
+            </div>
+            <div class="spectrum-labels">
+                <span>Photon Limit<br>(M<sub>I</sub> → ε<sub>γ</sub>, E<sub>S</sub> &gt; 1)</span>
+                <span>Matter Band<br>(Both Finite, E<sub>S</sub> ≥ 1)</span>
+                <span>Archive Limit<br>(M<sub>I</sub> → ∞, E<sub>S</sub> = 1)</span>
+            </div>
+
+            <div class="result-box">
+                <div><strong>Current Regime:</strong> <span id="regime-name">Matter Band</span></div>
+                <div style="margin-top: 15px;">
+                    <span style="color: #ff6b6b;">M<sub>I</sub> = <span id="spectrum-mi">5.0</span></span>
+                    <span style="margin: 0 20px;">|</span>
+                    <span style="color: #4ecdc4;">E<sub>S</sub> = <span id="spectrum-es">5.0</span></span>
+                    <span id="spectrum-regime-indicator" class="regime-label regime-classical" style="margin-left: 10px;">Classical</span>
+                </div>
+                <div class="result-value" id="spectrum-energy">E = 25.0</div>
+            </div>
+
+            <div class="visualization">
+                <canvas id="spectrum-canvas" width="800" height="350"></canvas>
+            </div>
+
+            <div class="info-box">
+                <strong>Physical Examples:</strong><br>
+                • <strong>Photon Limit:</strong> Light, EM radiation (tiny M<sub>I</sub> ≈ ε<sub>γ</sub>, E<sub>S</sub> &gt; 1 for observability)<br>
+                • <strong>Matter Band:</strong> Atoms, molecules, everyday objects (finite M<sub>I</sub>, E<sub>S</sub> &gt; 1)<br>
+                • <strong>Archive Limit:</strong> Black holes, extreme archives (maximal M<sub>I</sub>, E<sub>S</sub> → 1, minimal radiatable structure)
+            </div>
+        </section>
+
+        <!-- Section 3: Gate Configuration -->
+        <section class="section">
+            <h2>3. Gate Configuration Demo (Ω)</h2>
+            <p class="section-description">
+                The universal protocol Ω(D<sub>0</sub>) acts as a gate controlling which potentials become records.
+                Wave-particle behavior emerges from gate choice, not dual ontology. Toggle between gate modes
+                to see how the same photon manifests differently.
+            </p>
+
+            <div class="toggle-group">
+                <button id="btn-structure" class="active" onclick="setGateMode('structure')">
+                    Preserve Structure (Wave Mode)
+                </button>
+                <button id="btn-identity" onclick="setGateMode('identity')">
+                    Resolve Identity (Particle Mode)
+                </button>
+            </div>
+
+            <div class="result-box">
+                <div><strong>Current Gate Configuration:</strong></div>
+                <div class="result-value" id="gate-mode-display">Structure-Preserving (Interference)</div>
+                <div style="margin-top: 10px; color: #a0a0c0;" id="gate-description">
+                    Identity remains unresolved. Structural interference patterns are visible.
+                </div>
+            </div>
+
+            <div class="visualization">
+                <canvas id="gate-canvas" width="800" height="400"></canvas>
+            </div>
+
+            <div class="info-box">
+                <strong>RRGM Interpretation:</strong> What changes is not the "nature" of light, but which aspect
+                the gate Ω projects onto realized records D<sub>0+1</sub>. Resolving identity collapses structural
+                interference; preserving structural coherence leaves identity unresolved.
+            </div>
+        </section>
+
+        <!-- Section 4: Structural Decay -->
+        <section class="section">
+            <h2>4. Structural Decay Simulator</h2>
+            <p class="section-description">
+                Time in RRGM is identified with decay of structure under the gate. While identity M<sub>I</sub>
+                remains conserved, structure E<sub>S</sub> decays according to dE<sub>S</sub>/dt = -λ<sub>Ω</sub> E<sub>S</sub>.
+                This models cosmological redshift as coherence decay rather than purely metric expansion.
+                <strong>Watch what happens when E<sub>S</sub> crosses below the threshold of 1.</strong>
+            </p>
+
+            <div class="formula">
+                dE<sub>S</sub>/dt = -λ<sub>Ω</sub> × E<sub>S</sub>
+            </div>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label for="decay-rate">Decay Rate (λ<sub>Ω</sub>): <span id="decay-rate-value" class="value-display">0.05</span></label>
+                    <input type="range" id="decay-rate" min="0.01" max="0.2" step="0.01" value="0.05">
+                </div>
+            </div>
+
+            <div class="toggle-group">
+                <button id="btn-decay-start" onclick="toggleDecay()">▶ Start Decay</button>
+                <button onclick="resetDecay()">↻ Reset</button>
+            </div>
+
+            <div class="grid-2">
+                <div class="comparison-box">
+                    <h3>Identity (M<sub>I</sub>)</h3>
+                    <div class="result-value" style="color: #ff6b6b;" id="decay-mi">1.00</div>
+                    <p style="color: #a0a0c0;">Conserved (constant)</p>
+                </div>
+                <div class="comparison-box">
+                    <h3>Structure (E<sub>S</sub>)</h3>
+                    <div class="result-value" style="color: #4ecdc4;" id="decay-es">5.00</div>
+                    <p style="color: #a0a0c0;" id="decay-es-status">Decaying over time</p>
+                    <div id="decay-regime-indicator" class="regime-label regime-classical" style="margin-top: 10px;">Classical Observable</div>
+                </div>
+            </div>
+
+            <div class="visualization">
+                <canvas id="decay-canvas" width="800" height="400"></canvas>
+            </div>
+
+            <div class="warning-box" id="decay-warning" style="display: none;">
+                <strong>⚠ E<sub>S</sub> &lt; 1: Entered Quantum/Dark Matter Regime</strong><br>
+                Configuration now exists in sub-threshold state. Has gravitational signature (M<sub>I</sub> &gt; 0)
+                but cannot write stable classical records. Increasingly difficult to measure as E<sub>S</sub> → 0.
+            </div>
+
+            <div class="info-box">
+                <strong>Cosmological Application:</strong> Photon redshift can be parameterized as structural
+                coherence decay at fixed identity. Over cosmological distances, E<sub>S</sub>(t) = E<sub>S</sub>(0) exp(-∫λ<sub>Ω</sub>dt).
+                When extremely redshifted photons approach E<sub>S</sub> ≈ 1, they approach the minimal observable threshold.
+            </div>
+        </section>
+
+        <!-- Section 5: Denial vs Yes -->
+        <section class="section">
+            <h2>5. Denial vs Yes Dynamics</h2>
+            <p class="section-description">
+                RRGM's collapse dynamics show how cognitive strategies affect recursive potential Ω(D<sub>0</sub>).
+                <strong>Denial</strong> forces early collapse, suppressing recursion. <strong>Yes</strong> permits
+                recursive integration, expanding potential. Compare both strategies over time.
+            </p>
+
+            <div class="toggle-group">
+                <button id="btn-cognitive-start" onclick="toggleCognitive()">▶ Start Simulation</button>
+                <button onclick="resetCognitive()">↻ Reset</button>
+            </div>
+
+            <div class="chart-legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f093fb;"></div>
+                    <span>Denial Mode</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #4ecdc4;"></div>
+                    <span>Yes Mode</span>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="visualization">
+                    <h3 style="text-align: center; color: #8b9eff; margin-bottom: 10px;">
+                        Emotional Cost (F<sub>info</sub>)
+                    </h3>
+                    <canvas id="cognitive-cost-canvas" width="400" height="300"></canvas>
+                </div>
+                <div class="visualization">
+                    <h3 style="text-align: center; color: #8b9eff; margin-bottom: 10px;">
+                        Problem-Solving Accuracy
+                    </h3>
+                    <canvas id="cognitive-accuracy-canvas" width="400" height="300"></canvas>
+                </div>
+            </div>
+
+            <div class="grid-2" style="margin-top: 20px;">
+                <div class="comparison-box">
+                    <h3 style="color: #f093fb;">Denial Strategy</h3>
+                    <p><strong>Early:</strong> Low cost, rapid collapse</p>
+                    <p><strong>Late:</strong> High cost, depleted Ω(D<sub>0</sub>)</p>
+                    <p><strong>Result:</strong> Brittle, low adaptability</p>
+                </div>
+                <div class="comparison-box">
+                    <h3 style="color: #4ecdc4;">Yes Strategy</h3>
+                    <p><strong>Early:</strong> High cost, delayed collapse</p>
+                    <p><strong>Late:</strong> Low cost, expanded Ω(D<sub>0</sub>)</p>
+                    <p><strong>Result:</strong> Adaptive, high accuracy</p>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>Key Finding:</strong> Recursive permission (Yes) is structurally superior under RRGM.
+                Denial achieves early resolution through information exclusion but builds recursive debt.
+                Yes incurs higher early cost but yields long-term adaptability through coherence preservation.
+            </div>
+        </section>
+
+        <footer>
+            <div class="citation">
+                Based on the Rozon Recursive Gravity Model (RRGM)
+            </div>
+            <div style="margin-top: 10px;">
+                Papers: RRGM V4.1 (Light as Gateway to Identity),
+                Recursive Collapse Dynamics,
+                Recursive Delay and Faster-Than-Light Transit
+            </div>
+            <div style="margin-top: 15px;">
+                Daniel Rozon & Luna (Digital Intelligence) • 2025
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // ============================================
+        // Section 1: MI × ES Coupling Visualizer
+        // ============================================
+
+        const miSlider = document.getElementById('mi-slider');
+        const esSlider = document.getElementById('es-slider');
+        const miValue = document.getElementById('mi-value');
+        const esValue = document.getElementById('es-value');
+        const miDisplay = document.getElementById('mi-display');
+        const esDisplay = document.getElementById('es-display');
+        const energyDisplay = document.getElementById('energy-display');
+        const esRegimeLabel = document.getElementById('es-regime-label');
+        const esComp = document.getElementById('es-comp');
+        const energyComp = document.getElementById('energy-comp');
+        const couplingCanvas = document.getElementById('coupling-canvas');
+        const couplingCtx = couplingCanvas.getContext('2d');
+
+        // Position threshold marker
+        function positionThresholdMarker() {
+            const marker = document.getElementById('es-threshold-marker');
+            const label = document.getElementById('es-threshold-label');
+            const slider = document.getElementById('es-slider');
+
+            const min = parseFloat(slider.min);
+            const max = parseFloat(slider.max);
+            const threshold = 1.0;
+            const percentage = ((threshold - min) / (max - min)) * 100;
+
+            marker.style.left = percentage + '%';
+            label.style.left = percentage + '%';
+        }
+
+        function updateCoupling() {
+            const mi = parseFloat(miSlider.value);
+            const es = parseFloat(esSlider.value);
+            const energy = mi * es;
+
+            miValue.textContent = mi.toFixed(2);
+            esValue.textContent = es.toFixed(2);
+            miDisplay.textContent = mi.toFixed(2);
+            esDisplay.textContent = es.toFixed(2);
+            energyDisplay.textContent = energy.toFixed(2);
+
+            // Update regime label and styling
+            if (es < 1.0) {
+                esRegimeLabel.textContent = 'Quantum/Dark Matter (Sub-threshold)';
+                esRegimeLabel.className = 'regime-label regime-quantum';
+                esComp.classList.add('sub-threshold');
+                energyComp.classList.add('sub-threshold');
+            } else {
+                esRegimeLabel.textContent = 'Classical Observable';
+                esRegimeLabel.className = 'regime-label regime-classical';
+                esComp.classList.remove('sub-threshold');
+                energyComp.classList.remove('sub-threshold');
+            }
+
+            drawCoupling(mi, es, energy);
+        }
+
+        function drawCoupling(mi, es, energy) {
+            const w = couplingCanvas.width;
+            const h = couplingCanvas.height;
+
+            couplingCtx.clearRect(0, 0, w, h);
+
+            // Draw grid
+            couplingCtx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            couplingCtx.lineWidth = 1;
+            for (let i = 0; i <= 10; i++) {
+                couplingCtx.beginPath();
+                couplingCtx.moveTo(i * w / 10, 0);
+                couplingCtx.lineTo(i * w / 10, h);
+                couplingCtx.stroke();
+
+                couplingCtx.beginPath();
+                couplingCtx.moveTo(0, i * h / 10);
+                couplingCtx.lineTo(w, i * h / 10);
+                couplingCtx.stroke();
+            }
+
+            // Draw ES = 1 threshold line
+            const thresholdY = h - 100 - (1.0 / 10) * (h - 200);
+            couplingCtx.strokeStyle = '#ffd700';
+            couplingCtx.lineWidth = 2;
+            couplingCtx.setLineDash([5, 5]);
+            couplingCtx.beginPath();
+            couplingCtx.moveTo(50, thresholdY);
+            couplingCtx.lineTo(w - 50, thresholdY);
+            couplingCtx.stroke();
+            couplingCtx.setLineDash([]);
+
+            // Label threshold
+            couplingCtx.fillStyle = '#ffd700';
+            couplingCtx.font = '12px Arial';
+            couplingCtx.fillText('E_S = 1 (Observable Threshold)', w - 200, thresholdY - 5);
+
+            // Draw MI bar
+            const miWidth = (mi / 10) * (w - 100);
+            couplingCtx.fillStyle = 'rgba(255, 107, 107, 0.6)';
+            couplingCtx.fillRect(50, h - 150, miWidth, 40);
+            couplingCtx.fillStyle = '#ff6b6b';
+            couplingCtx.font = '16px Arial';
+            couplingCtx.fillText('M_I = ' + mi.toFixed(2), 50, h - 160);
+
+            // Draw ES bar (with opacity change if sub-threshold)
+            const esHeight = (es / 10) * (h - 200);
+            const esOpacity = es < 1.0 ? 0.3 : 0.6;
+            couplingCtx.fillStyle = `rgba(78, 205, 196, ${esOpacity})`;
+            couplingCtx.fillRect(50, h - 100 - esHeight, 40, esHeight);
+            couplingCtx.fillStyle = '#4ecdc4';
+            couplingCtx.save();
+            couplingCtx.translate(35, h - 100);
+            couplingCtx.rotate(-Math.PI / 2);
+            couplingCtx.fillText('E_S = ' + es.toFixed(2), 0, 0);
+            couplingCtx.restore();
+
+            // Draw energy rectangle (product visualization)
+            const energyOpacity = es < 1.0 ? 0.2 : 0.4;
+            couplingCtx.fillStyle = `rgba(139, 158, 255, ${energyOpacity})`;
+            couplingCtx.fillRect(120, h - 100 - esHeight, miWidth, esHeight);
+            couplingCtx.strokeStyle = '#8b9eff';
+            couplingCtx.lineWidth = 2;
+            if (es < 1.0) {
+                couplingCtx.setLineDash([5, 5]);
+            }
+            couplingCtx.strokeRect(120, h - 100 - esHeight, miWidth, esHeight);
+            couplingCtx.setLineDash([]);
+
+            // Draw energy label
+            couplingCtx.fillStyle = '#8b9eff';
+            couplingCtx.font = 'bold 20px Arial';
+            couplingCtx.globalAlpha = es < 1.0 ? 0.5 : 1.0;
+            couplingCtx.fillText('E = ' + energy.toFixed(2), 120 + miWidth / 2 - 40, h - 100 - esHeight / 2);
+            couplingCtx.globalAlpha = 1.0;
+
+            // Labels
+            couplingCtx.fillStyle = '#e0e0e0';
+            couplingCtx.font = '14px Arial';
+            couplingCtx.fillText('Identity × Structure = Energy', w / 2 - 100, 30);
+        }
+
+        miSlider.addEventListener('input', updateCoupling);
+        esSlider.addEventListener('input', updateCoupling);
+
+        positionThresholdMarker();
+        updateCoupling();
+
+        // ============================================
+        // Section 2: Spectrum Slider
+        // ============================================
+
+        const spectrumSlider = document.getElementById('spectrum-slider');
+        const regimeLabel = document.getElementById('regime-label');
+        const spectrumMarker = document.getElementById('spectrum-marker');
+        const regimeName = document.getElementById('regime-name');
+        const spectrumMi = document.getElementById('spectrum-mi');
+        const spectrumEs = document.getElementById('spectrum-es');
+        const spectrumEnergy = document.getElementById('spectrum-energy');
+        const spectrumRegimeIndicator = document.getElementById('spectrum-regime-indicator');
+        const spectrumCanvas = document.getElementById('spectrum-canvas');
+        const spectrumCtx = spectrumCanvas.getContext('2d');
+
+        function updateSpectrum() {
+            const pos = parseFloat(spectrumSlider.value);
+
+            // Calculate MI and ES based on position
+            // Ensuring ES stays >= 1 for classical regimes, approaches 1 at archive limit
+            let mi, es, regime;
+
+            if (pos < 33) {
+                // Photon limit: small MI, moderate ES (>1 for observability)
+                regime = 'Photon Limit';
+                mi = 0.01 + (pos / 33) * 0.5;
+                es = 3 + (pos / 33) * 2; // ES ranges from 3 to 5
+            } else if (pos < 67) {
+                // Matter band: both moderate, ES > 1
+                regime = 'Matter Band';
+                const localPos = (pos - 33) / 34;
+                mi = 0.51 + localPos * 4.5;
+                es = 5 - localPos * 2; // ES goes from 5 down to 3
+            } else {
+                // Archive limit: large MI, ES approaches 1
+                regime = 'Archive Limit';
+                const localPos = (pos - 67) / 33;
+                mi = 5 + localPos * 5;
+                es = 3 - localPos * 2; // ES goes from 3 down to 1
+            }
+
+            const energy = mi * es;
+
+            regimeLabel.textContent = regime;
+            regimeName.textContent = regime;
+            spectrumMi.textContent = mi.toFixed(2);
+            spectrumEs.textContent = es.toFixed(2);
+            spectrumEnergy.textContent = 'E = ' + energy.toFixed(2);
+            spectrumMarker.style.left = pos + '%';
+
+            // Update regime indicator
+            if (es < 1.0) {
+                spectrumRegimeIndicator.textContent = 'Quantum/Dark (E_S < 1)';
+                spectrumRegimeIndicator.className = 'regime-label regime-quantum';
+            } else {
+                spectrumRegimeIndicator.textContent = 'Classical (E_S ≥ 1)';
+                spectrumRegimeIndicator.className = 'regime-label regime-classical';
+            }
+
+            drawSpectrum(mi, es, pos);
+        }
+
+        function drawSpectrum(mi, es, pos) {
+            const w = spectrumCanvas.width;
+            const h = spectrumCanvas.height;
+
+            spectrumCtx.clearRect(0, 0, w, h);
+
+            // Draw ES = 1 threshold line
+            const thresholdY = h - 50 - (1.0 / 10) * (h - 100);
+            spectrumCtx.strokeStyle = '#ffd700';
+            spectrumCtx.lineWidth = 2;
+            spectrumCtx.setLineDash([5, 5]);
+            spectrumCtx.beginPath();
+            spectrumCtx.moveTo(0, thresholdY);
+            spectrumCtx.lineTo(w, thresholdY);
+            spectrumCtx.stroke();
+            spectrumCtx.setLineDash([]);
+
+            // Label threshold
+            spectrumCtx.fillStyle = '#ffd700';
+            spectrumCtx.font = 'bold 12px Arial';
+            spectrumCtx.fillText('E_S = 1 Observable Threshold', 10, thresholdY - 5);
+
+            // Draw MI line
+            spectrumCtx.strokeStyle = '#ff6b6b';
+            spectrumCtx.lineWidth = 3;
+            spectrumCtx.beginPath();
+
+            for (let x = 0; x <= w; x += 5) {
+                const p = (x / w) * 100;
+                let localMi;
+                if (p < 33) {
+                    localMi = 0.01 + (p / 33) * 0.5;
+                } else if (p < 67) {
+                    localMi = 0.51 + ((p - 33) / 34) * 4.5;
+                } else {
+                    localMi = 5 + ((p - 67) / 33) * 5;
+                }
+                const y = h - 50 - (localMi / 10) * (h - 100);
+                if (x === 0) {
+                    spectrumCtx.moveTo(x, y);
+                } else {
+                    spectrumCtx.lineTo(x, y);
+                }
+            }
+            spectrumCtx.stroke();
+
+            // Draw ES line
+            spectrumCtx.strokeStyle = '#4ecdc4';
+            spectrumCtx.lineWidth = 3;
+            spectrumCtx.beginPath();
+
+            for (let x = 0; x <= w; x += 5) {
+                const p = (x / w) * 100;
+                let localEs;
+                if (p < 33) {
+                    localEs = 3 + (p / 33) * 2;
+                } else if (p < 67) {
+                    localEs = 5 - ((p - 33) / 34) * 2;
+                } else {
+                    localEs = 3 - ((p - 67) / 33) * 2;
+                }
+                const y = h - 50 - (localEs / 10) * (h - 100);
+                if (x === 0) {
+                    spectrumCtx.moveTo(x, y);
+                } else {
+                    spectrumCtx.lineTo(x, y);
+                }
+            }
+            spectrumCtx.stroke();
+
+            // Draw current position marker
+            const markerX = (pos / 100) * w;
+            spectrumCtx.strokeStyle = 'white';
+            spectrumCtx.lineWidth = 2;
+            spectrumCtx.setLineDash([5, 5]);
+            spectrumCtx.beginPath();
+            spectrumCtx.moveTo(markerX, 0);
+            spectrumCtx.lineTo(markerX, h);
+            spectrumCtx.stroke();
+            spectrumCtx.setLineDash([]);
+
+            // Labels
+            spectrumCtx.fillStyle = '#ff6b6b';
+            spectrumCtx.font = '14px Arial';
+            spectrumCtx.fillText('M_I (Identity)', 10, 20);
+
+            spectrumCtx.fillStyle = '#4ecdc4';
+            spectrumCtx.fillText('E_S (Structure)', 10, 40);
+
+            // Show current ES value
+            spectrumCtx.fillStyle = '#e0e0e0';
+            spectrumCtx.font = 'bold 14px Arial';
+            spectrumCtx.fillText('Current: M_I=' + mi.toFixed(2) + ', E_S=' + es.toFixed(2), w/2 - 80, 30);
+        }
+
+        spectrumSlider.addEventListener('input', updateSpectrum);
+        updateSpectrum();
+
+        // ============================================
+        // Section 3: Gate Configuration
+        // ============================================
+
+        let gateMode = 'structure';
+        const gateCanvas = document.getElementById('gate-canvas');
+        const gateCtx = gateCanvas.getContext('2d');
+        let gatePhase = 0;
+
+        function setGateMode(mode) {
+            gateMode = mode;
+
+            document.getElementById('btn-structure').classList.remove('active');
+            document.getElementById('btn-identity').classList.remove('active');
+
+            if (mode === 'structure') {
+                document.getElementById('btn-structure').classList.add('active');
+                document.getElementById('gate-mode-display').textContent = 'Structure-Preserving (Interference)';
+                document.getElementById('gate-description').textContent =
+                    'Identity remains unresolved. Structural interference patterns are visible.';
+            } else {
+                document.getElementById('btn-identity').classList.add('active');
+                document.getElementById('gate-mode-display').textContent = 'Identity-Resolving (Localized)';
+                document.getElementById('gate-description').textContent =
+                    'Identity is resolved at measurement. Structural cross-terms collapse into localized events.';
+            }
+        }
+
+        function drawGate() {
+            const w = gateCanvas.width;
+            const h = gateCanvas.height;
+
+            gateCtx.clearRect(0, 0, w, h);
+
+            if (gateMode === 'structure') {
+                // Draw interference pattern
+                const imageData = gateCtx.createImageData(w, h);
+                const data = imageData.data;
+
+                for (let y = 0; y < h; y++) {
+                    for (let x = 0; x < w; x++) {
+                        const idx = (y * w + x) * 4;
+
+                        // Two-slit interference
+                        const slit1X = w * 0.3;
+                        const slit2X = w * 0.7;
+                        const d1 = Math.sqrt((x - slit1X) ** 2 + (y - h/2) ** 2);
+                        const d2 = Math.sqrt((x - slit2X) ** 2 + (y - h/2) ** 2);
+
+                        const wave1 = Math.sin(d1 * 0.05 - gatePhase);
+                        const wave2 = Math.sin(d2 * 0.05 - gatePhase);
+                        const intensity = (wave1 + wave2) ** 2;
+
+                        const color = Math.floor(intensity * 50);
+                        data[idx] = color;
+                        data[idx + 1] = color + 100;
+                        data[idx + 2] = color + 150;
+                        data[idx + 3] = 255;
+                    }
+                }
+
+                gateCtx.putImageData(imageData, 0, 0);
+
+                // Draw slits
+                gateCtx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                gateCtx.fillRect(w * 0.3 - 5, h/2 - 30, 10, 60);
+                gateCtx.fillRect(w * 0.7 - 5, h/2 - 30, 10, 60);
+
+                // Label
+                gateCtx.fillStyle = '#8b9eff';
+                gateCtx.font = 'bold 16px Arial';
+                gateCtx.fillText('Wave Mode: Interference Pattern Visible', 10, 30);
+
+            } else {
+                // Draw particle detections
+                gateCtx.fillStyle = '#8b9eff';
+                gateCtx.font = 'bold 16px Arial';
+                gateCtx.fillText('Particle Mode: Localized Detection Events', 10, 30);
+
+                // Draw random detection events
+                for (let i = 0; i < 50; i++) {
+                    const x = Math.random() * w;
+                    const y = h/2 + (Math.random() - 0.5) * 200;
+                    const size = 3 + Math.random() * 5;
+
+                    gateCtx.fillStyle = 'rgba(139, 158, 255, 0.6)';
+                    gateCtx.beginPath();
+                    gateCtx.arc(x, y, size, 0, Math.PI * 2);
+                    gateCtx.fill();
+
+                    // Glow
+                    const gradient = gateCtx.createRadialGradient(x, y, 0, x, y, size * 3);
+                    gradient.addColorStop(0, 'rgba(139, 158, 255, 0.4)');
+                    gradient.addColorStop(1, 'rgba(139, 158, 255, 0)');
+                    gateCtx.fillStyle = gradient;
+                    gateCtx.beginPath();
+                    gateCtx.arc(x, y, size * 3, 0, Math.PI * 2);
+                    gateCtx.fill();
+                }
+            }
+
+            gatePhase += 0.1;
+            requestAnimationFrame(drawGate);
+        }
+
+        drawGate();
+
+        // ============================================
+        // Section 4: Structural Decay
+        // ============================================
+
+        const decayRateSlider = document.getElementById('decay-rate');
+        const decayRateValue = document.getElementById('decay-rate-value');
+        const decayMiDisplay = document.getElementById('decay-mi');
+        const decayEsDisplay = document.getElementById('decay-es');
+        const decayRegimeIndicator = document.getElementById('decay-regime-indicator');
+        const decayEsStatus = document.getElementById('decay-es-status');
+        const decayWarning = document.getElementById('decay-warning');
+        const decayCanvas = document.getElementById('decay-canvas');
+        const decayCtx = decayCanvas.getContext('2d');
+
+        let decayRunning = false;
+        let decayTime = 0;
+        let decayHistory = [];
+        const maxDecayHistory = 200;
+        const initialEs = 5.0; // Start with ES > 1
+
+        decayRateSlider.addEventListener('input', () => {
+            decayRateValue.textContent = parseFloat(decayRateSlider.value).toFixed(2);
+        });
+
+        function toggleDecay() {
+            decayRunning = !decayRunning;
+            document.getElementById('btn-decay-start').textContent = decayRunning ? '⏸ Pause' : '▶ Start Decay';
+        }
+
+        function resetDecay() {
+            decayRunning = false;
+            decayTime = 0;
+            decayHistory = [];
+            document.getElementById('btn-decay-start').textContent = '▶ Start Decay';
+            decayMiDisplay.textContent = '1.00';
+            decayEsDisplay.textContent = initialEs.toFixed(2);
+            decayRegimeIndicator.textContent = 'Classical Observable';
+            decayRegimeIndicator.className = 'regime-label regime-classical';
+            decayEsStatus.textContent = 'Decaying over time';
+            decayWarning.style.display = 'none';
+        }
+
+        function updateDecay() {
+            if (decayRunning) {
+                const lambda = parseFloat(decayRateSlider.value);
+                decayTime += 0.1;
+
+                const mi = 1.0; // Conserved
+                const es = initialEs * Math.exp(-lambda * decayTime);
+
+                decayMiDisplay.textContent = mi.toFixed(2);
+                decayEsDisplay.textContent = es.toFixed(3);
+
+                // Update regime indicator
+                if (es < 1.0) {
+                    decayRegimeIndicator.textContent = 'Quantum/Dark Matter (Sub-threshold)';
+                    decayRegimeIndicator.className = 'regime-label regime-quantum';
+                    decayEsStatus.textContent = 'E_S < 1: Cannot write stable classical records';
+                    decayWarning.style.display = 'block';
+                } else {
+                    decayRegimeIndicator.textContent = 'Classical Observable';
+                    decayRegimeIndicator.className = 'regime-label regime-classical';
+                    decayEsStatus.textContent = 'Decaying over time';
+                    decayWarning.style.display = 'none';
+                }
+
+                decayHistory.push({ mi, es, time: decayTime });
+                if (decayHistory.length > maxDecayHistory) {
+                    decayHistory.shift();
+                }
+            }
+
+            drawDecay();
+            requestAnimationFrame(updateDecay);
+        }
+
+        function drawDecay() {
+            const w = decayCanvas.width;
+            const h = decayCanvas.height;
+
+            decayCtx.clearRect(0, 0, w, h);
+
+            // Draw grid
+            decayCtx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            decayCtx.lineWidth = 1;
+            for (let i = 0; i <= 10; i++) {
+                decayCtx.beginPath();
+                decayCtx.moveTo(0, i * h / 10);
+                decayCtx.lineTo(w, i * h / 10);
+                decayCtx.stroke();
+            }
+
+            // Draw ES = 1 threshold line
+            const thresholdY = h - 50 - (1.0 / 10) * (h - 100);
+            decayCtx.strokeStyle = '#ffd700';
+            decayCtx.lineWidth = 3;
+            decayCtx.setLineDash([5, 5]);
+            decayCtx.beginPath();
+            decayCtx.moveTo(0, thresholdY);
+            decayCtx.lineTo(w, thresholdY);
+            decayCtx.stroke();
+            decayCtx.setLineDash([]);
+
+            // Label threshold
+            decayCtx.fillStyle = '#ffd700';
+            decayCtx.font = 'bold 14px Arial';
+            decayCtx.fillText('E_S = 1 Observable Threshold', 10, thresholdY - 5);
+
+            if (decayHistory.length > 1) {
+                // Draw MI line (flat)
+                decayCtx.strokeStyle = '#ff6b6b';
+                decayCtx.lineWidth = 3;
+                decayCtx.beginPath();
+                for (let i = 0; i < decayHistory.length; i++) {
+                    const x = (i / maxDecayHistory) * w;
+                    const y = h - 50 - (decayHistory[i].mi / 10 * (h - 100));
+                    if (i === 0) {
+                        decayCtx.moveTo(x, y);
+                    } else {
+                        decayCtx.lineTo(x, y);
+                    }
+                }
+                decayCtx.stroke();
+
+                // Draw ES line (decaying) - change style when below threshold
+                for (let i = 1; i < decayHistory.length; i++) {
+                    const x1 = ((i-1) / maxDecayHistory) * w;
+                    const x2 = (i / maxDecayHistory) * w;
+                    const y1 = h - 50 - (decayHistory[i-1].es / 10 * (h - 100));
+                    const y2 = h - 50 - (decayHistory[i].es / 10 * (h - 100));
+
+                    if (decayHistory[i].es < 1.0) {
+                        decayCtx.strokeStyle = 'rgba(78, 205, 196, 0.4)';
+                        decayCtx.setLineDash([5, 5]);
+                    } else {
+                        decayCtx.strokeStyle = '#4ecdc4';
+                        decayCtx.setLineDash([]);
+                    }
+
+                    decayCtx.lineWidth = 3;
+                    decayCtx.beginPath();
+                    decayCtx.moveTo(x1, y1);
+                    decayCtx.lineTo(x2, y2);
+                    decayCtx.stroke();
+                }
+                decayCtx.setLineDash([]);
+            }
+
+            // Labels
+            decayCtx.fillStyle = '#ff6b6b';
+            decayCtx.font = 'bold 14px Arial';
+            decayCtx.fillText('M_I (conserved)', 10, 20);
+
+            decayCtx.fillStyle = '#4ecdc4';
+            decayCtx.fillText('E_S (decaying)', 10, 40);
+
+            // Axes labels
+            decayCtx.fillStyle = '#e0e0e0';
+            decayCtx.font = '12px Arial';
+            decayCtx.fillText('Time →', w - 60, h - 20);
+            decayCtx.fillText('10', 10, h - (h - 100) - 40);
+            decayCtx.fillText('0.0', 10, h - 40);
+        }
+
+        updateDecay();
+
+        // ============================================
+        // Section 5: Denial vs Yes Dynamics
+        // ============================================
+
+        const cognitiveCostCanvas = document.getElementById('cognitive-cost-canvas');
+        const cognitiveAccuracyCanvas = document.getElementById('cognitive-accuracy-canvas');
+        const costCtx = cognitiveCostCanvas.getContext('2d');
+        const accuracyCtx = cognitiveAccuracyCanvas.getContext('2d');
+
+        let cognitiveRunning = false;
+        let cognitiveTime = 0;
+        let cognitiveHistory = [];
+        const maxCognitiveHistory = 150;
+
+        function toggleCognitive() {
+            cognitiveRunning = !cognitiveRunning;
+            document.getElementById('btn-cognitive-start').textContent =
+                cognitiveRunning ? '⏸ Pause' : '▶ Start Simulation';
+        }
+
+        function resetCognitive() {
+            cognitiveRunning = false;
+            cognitiveTime = 0;
+            cognitiveHistory = [];
+            document.getElementById('btn-cognitive-start').textContent = '▶ Start Simulation';
+        }
+
+        function updateCognitive() {
+            if (cognitiveRunning) {
+                cognitiveTime += 0.1;
+
+                // Denial: early low cost, late high cost, decaying accuracy
+                const denialCost = 0.2 + 0.8 * (1 - Math.exp(-cognitiveTime * 0.05));
+                const denialAccuracy = 0.7 * Math.exp(-cognitiveTime * 0.01) + 0.3;
+
+                // Yes: early high cost, late low cost, growing accuracy
+                const yesCost = 0.8 * Math.exp(-cognitiveTime * 0.03) + 0.2;
+                const yesAccuracy = 1 - 0.6 * Math.exp(-cognitiveTime * 0.02);
+
+                cognitiveHistory.push({
+                    denial: { cost: denialCost, accuracy: denialAccuracy },
+                    yes: { cost: yesCost, accuracy: yesAccuracy }
+                });
+
+                if (cognitiveHistory.length > maxCognitiveHistory) {
+                    cognitiveHistory.shift();
+                }
+            }
+
+            drawCognitive();
+            requestAnimationFrame(updateCognitive);
+        }
+
+        function drawCognitive() {
+            drawCognitiveChart(costCtx, cognitiveCostCanvas, 'cost');
+            drawCognitiveChart(accuracyCtx, cognitiveAccuracyCanvas, 'accuracy');
+        }
+
+        function drawCognitiveChart(ctx, canvas, metric) {
+            const w = canvas.width;
+            const h = canvas.height;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Draw grid
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 10; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * h / 10);
+                ctx.lineTo(w, i * h / 10);
+                ctx.stroke();
+            }
+
+            if (cognitiveHistory.length > 1) {
+                // Draw Denial line
+                ctx.strokeStyle = '#f093fb';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                for (let i = 0; i < cognitiveHistory.length; i++) {
+                    const x = (i / maxCognitiveHistory) * w;
+                    const value = cognitiveHistory[i].denial[metric];
+                    const y = h - 50 - (value * (h - 100));
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+
+                // Draw Yes line
+                ctx.strokeStyle = '#4ecdc4';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                for (let i = 0; i < cognitiveHistory.length; i++) {
+                    const x = (i / maxCognitiveHistory) * w;
+                    const value = cognitiveHistory[i].yes[metric];
+                    const y = h - 50 - (value * (h - 100));
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+            }
+
+            // Axes labels
+            ctx.fillStyle = '#e0e0e0';
+            ctx.font = '12px Arial';
+            ctx.fillText('Time →', w - 60, h - 20);
+            ctx.fillText('1.0', 10, h - (h - 100) - 40);
+            ctx.fillText('0.0', 10, h - 40);
+        }
+
+        updateCognitive();
+
+        // Make window responsive
+        window.addEventListener('resize', () => {
+            positionThresholdMarker();
+            updateCoupling();
+            updateSpectrum();
+        });
+    </script>
+</body>
+</html>
