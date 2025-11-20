@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Human Transit Simulator: FTL vs Teleportation (RRGM)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 100%);
+            color: #e0e0e0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(100, 200, 255, 0.3);
+        }
+
+        .header h1 {
+            color: #4da6ff;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .header p {
+            color: #b0b0b0;
+            font-size: 1.1em;
+        }
+
+        .overview {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 4px solid #4da6ff;
+        }
+
+        .comparison-table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px;
+            border: 1px solid rgba(100, 200, 255, 0.3);
+            text-align: left;
+        }
+
+        .comparison-table th {
+            background: rgba(77, 166, 255, 0.2);
+            color: #4da6ff;
+        }
+
+        .comparison-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .method-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(100, 200, 255, 0.3);
+            border-radius: 10px;
+            color: #e0e0e0;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.1em;
+        }
+
+        .tab-button:hover {
+            background: rgba(77, 166, 255, 0.2);
+        }
+
+        .tab-button.active {
+            background: rgba(77, 166, 255, 0.3);
+            border-color: #4da6ff;
+            color: #4da6ff;
+        }
+
+        .method-container {
+            display: none;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid rgba(100, 200, 255, 0.3);
+        }
+
+        .method-container.active {
+            display: block;
+        }
+
+        .stage {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            border-left: 4px solid #4da6ff;
+        }
+
+        .stage h3 {
+            color: #4da6ff;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .visualization-area {
+            position: relative;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+            border: 1px solid rgba(100, 200, 255, 0.3);
+        }
+
+        .human-avatar {
+            position: absolute;
+            width: 60px;
+            height: 100px;
+            background: linear-gradient(180deg, #ff9999 0%, #ff6666 100%);
+            border-radius: 30px 30px 10px 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: all 0.5s;
+            box-shadow: 0 0 20px rgba(255, 153, 153, 0.5);
+        }
+
+        .human-avatar::before {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #ffb3b3;
+            border-radius: 50%;
+            top: -20px;
+            left: 10px;
+        }
+
+        .human-avatar.ghosted {
+            opacity: 0.3;
+            filter: blur(3px);
+            box-shadow: 0 0 30px rgba(153, 153, 255, 0.8);
+        }
+
+        .human-avatar.substrate {
+            opacity: 0.2;
+            filter: blur(5px);
+            background: linear-gradient(180deg, #9999ff 0%, #6666ff 100%);
+            box-shadow: 0 0 40px rgba(153, 153, 255, 1);
+        }
+
+        .location-marker {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            text-align: center;
+            color: #4da6ff;
+            font-weight: bold;
+        }
+
+        .location-marker.location-a {
+            left: 50px;
+        }
+
+        .location-marker.location-b {
+            right: 50px;
+        }
+
+        .location-marker::before {
+            content: '📍';
+            display: block;
+            font-size: 2em;
+        }
+
+        .metrics-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(100, 200, 255, 0.3);
+        }
+
+        .metric-label {
+            color: #4da6ff;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .control-panel {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            color: #4da6ff;
+            margin-bottom: 5px;
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+            height: 8px;
+            background: rgba(100, 200, 255, 0.2);
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #4da6ff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .control-group .value-display {
+            display: inline-block;
+            margin-left: 10px;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #4da6ff 0%, #2e7cd6 100%);
+            color: white;
+        }
+
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(77, 166, 255, 0.4);
+        }
+
+        .btn-reset {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+        }
+
+        .btn-reset:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .risk-indicator {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .risk-low {
+            background: rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+            border: 1px solid #00ff00;
+        }
+
+        .risk-medium {
+            background: rgba(255, 255, 0, 0.2);
+            color: #ffff00;
+            border: 1px solid #ffff00;
+        }
+
+        .risk-high {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff0000;
+            border: 1px solid #ff0000;
+        }
+
+        .stage-progress {
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid rgba(100, 200, 255, 0.3);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4da6ff 0%, #2e7cd6 100%);
+            width: 0%;
+            transition: width 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .substrate-visualization {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .coordinate-grid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .coordinate-grid.active {
+            opacity: 1;
+        }
+
+        .grid-line {
+            position: absolute;
+            background: rgba(100, 200, 255, 0.2);
+        }
+
+        .grid-line.horizontal {
+            width: 100%;
+            height: 1px;
+        }
+
+        .grid-line.vertical {
+            width: 1px;
+            height: 100%;
+        }
+
+        .data-stream {
+            position: absolute;
+            width: 4px;
+            height: 20px;
+            background: #4da6ff;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            box-shadow: 0 0 10px #4da6ff;
+        }
+
+        .philosophical-corner {
+            background: rgba(255, 200, 100, 0.1);
+            border-left: 4px solid #ffa500;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .philosophical-corner h4 {
+            color: #ffa500;
+            margin-bottom: 10px;
+        }
+
+        .side-by-side {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .side-by-side {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(77, 166, 255, 0.9);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateX(400px);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .formula {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 3px solid #4da6ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Human Transit Simulator</h1>
+        <p>FTL vs Teleportation in the Rozon Recursive Gravity Model</p>
+    </div>
+
+    <div class="overview">
+        <h2>Overview</h2>
+        <p>Moving humans from point A to point B using RRGM mechanics offers two fundamentally different approaches:</p>
+        <ul style="margin: 15px 0 15px 30px; line-height: 1.8;">
+            <li><strong>FTL Transit:</strong> Continuous substrate navigation through D₀ (risky, true journey, maintain identity)</li>
+            <li><strong>Teleportation:</strong> Pattern transmission + reconstruction (cleaner, no journey, MI conservation)</li>
+        </ul>
+
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>Aspect</th>
+                    <th>FTL Transit</th>
+                    <th>Teleportation</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Journey Type</td>
+                    <td>Continuous through substrate</td>
+                    <td>No journey, pattern transmission</td>
+                </tr>
+                <tr>
+                    <td>Identity Risk</td>
+                    <td>Coherence loss in D₀</td>
+                    <td>Pattern corruption</td>
+                </tr>
+                <tr>
+                    <td>Time Required</td>
+                    <td>Effectively instant (no space)</td>
+                    <td>Transmission + reconstruction</td>
+                </tr>
+                <tr>
+                    <td>Energy Cost</td>
+                    <td>Coherence field maintenance</td>
+                    <td>E_S reconstruction energy</td>
+                </tr>
+                <tr>
+                    <td>Technical Challenge</td>
+                    <td>Substrate navigation</td>
+                    <td>Pattern fidelity</td>
+                </tr>
+                <tr>
+                    <td>"Are you the same?"</td>
+                    <td>Continuous identity</td>
+                    <td>M_I conserved, pattern matched</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="method-tabs">
+        <button class="tab-button active" onclick="switchTab('ftl')">
+            🚀 FTL Transit (Substrate Navigation)
+        </button>
+        <button class="tab-button" onclick="switchTab('teleport')">
+            📡 Teleportation (Pattern Transmission)
+        </button>
+        <button class="tab-button" onclick="switchTab('comparison')">
+            ⚖️ Side-by-Side Comparison
+        </button>
+    </div>
+
+    <!-- FTL Transit Method -->
+    <div id="ftl-method" class="method-container active">
+        <h2>FTL Transit: Substrate Navigation</h2>
+        <p style="margin-bottom: 20px;">Reduce E_S below threshold, navigate D₀ substrate, re-emerge at destination</p>
+
+        <div class="control-panel">
+            <h3 style="color: #4da6ff; margin-bottom: 15px;">Transit Parameters</h3>
+            <div class="control-group">
+                <label>Initial M_I (Identity Strength): <span class="value-display" id="ftl-mi-display">0.5</span></label>
+                <input type="range" id="ftl-mi" min="0.1" max="2.0" step="0.1" value="0.5" oninput="updateFTLParams()">
+            </div>
+            <div class="control-group">
+                <label>Coherence Field Stability: <span class="value-display" id="ftl-coherence-display">85%</span></label>
+                <input type="range" id="ftl-coherence" min="50" max="100" step="5" value="85" oninput="updateFTLParams()">
+            </div>
+            <div class="control-group">
+                <label>E_S Reduction Rate: <span class="value-display" id="ftl-rate-display">Medium</span></label>
+                <input type="range" id="ftl-rate" min="1" max="3" step="1" value="2" oninput="updateFTLParams()">
+            </div>
+            <div class="control-group">
+                <label>Navigation Accuracy: <span class="value-display" id="ftl-accuracy-display">95%</span></label>
+                <input type="range" id="ftl-accuracy" min="70" max="100" step="5" value="95" oninput="updateFTLParams()">
+            </div>
+        </div>
+
+        <div class="metrics-display" id="ftl-metrics">
+            <div class="metric-card">
+                <div class="metric-label">M_I</div>
+                <div class="metric-value" id="ftl-current-mi">0.5</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">E_S</div>
+                <div class="metric-value" id="ftl-current-es">8.0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Ω Gate</div>
+                <div class="metric-value" id="ftl-current-omega">1.0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">State</div>
+                <div class="metric-value" id="ftl-current-state">D₀₊₁</div>
+            </div>
+        </div>
+
+        <div class="visualization-area" id="ftl-viz">
+            <div class="location-marker location-a">A</div>
+            <div class="location-marker location-b">B</div>
+            <div class="human-avatar" id="ftl-avatar" style="left: 50px;"></div>
+            <div class="substrate-visualization" id="ftl-substrate">
+                <div class="coordinate-grid" id="ftl-grid"></div>
+            </div>
+        </div>
+
+        <div class="stage-progress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="ftl-progress">0%</div>
+            </div>
+        </div>
+
+        <div id="ftl-risk-display"></div>
+
+        <div class="action-buttons">
+            <button class="btn btn-start" onclick="startFTLTransit()" id="ftl-start-btn">Start FTL Transit</button>
+            <button class="btn btn-reset" onclick="resetFTL()">Reset</button>
+        </div>
+
+        <div class="stage">
+            <h3>Stage 1: E_S Reduction with Coherence Anchoring</h3>
+            <p>Apply coherence field to reduce structural energy while maintaining identity anchor.</p>
+            <div class="formula">E_S: 8.0 → 5.0 → 2.0 → 0.9</div>
+            <p style="margin-top: 10px;">Monitor coherence stability. If it drops below threshold, abort immediately.</p>
+        </div>
+
+        <div class="stage">
+            <h3>Stage 2: Threshold Crossing into D₀</h3>
+            <p>E_S drops below 1.0, human phases from D₀₊₁ (realized) into D₀ (substrate/potential).</p>
+            <div class="formula">E_S < 1.0 → State: Subthreshold → Domain: D₀</div>
+            <p style="margin-top: 10px;">M_I remains tagged and tracked. Not writing classical records.</p>
+        </div>
+
+        <div class="stage">
+            <h3>⭐ Stage 3: Substrate Navigation</h3>
+            <p>Navigate D₀ coordinate space (topological, not spatial). A and B aren't "distance apart" - they're different collapse potentials.</p>
+            <div class="formula">D₀ has no spatial metric. Navigation is configuration-based.</div>
+            <p style="margin-top: 10px;">M_I navigates by selecting destination collapse configuration. Effectively instant.</p>
+        </div>
+
+        <div class="stage">
+            <h3>Stage 4: Re-Emergence at B</h3>
+            <p>Coherence field triggers E_S restoration. Structure re-solidifies at destination.</p>
+            <div class="formula">E_S: 0.7 → 0.9 → 1.0 → threshold crossed!</div>
+            <p style="margin-top: 10px;">M_I + restored E_S = person realized at B.</p>
+        </div>
+
+        <div class="stage">
+            <h3>Stage 5: Risk Analysis</h3>
+            <div style="margin: 10px 0;">
+                <div class="risk-indicator risk-high">⚠️ Coherence loss during reduction → identity disperses (FATAL)</div>
+                <div class="risk-indicator risk-medium">⚠️ Navigation error → emerge elsewhere (LOST)</div>
+                <div class="risk-indicator risk-medium">⚠️ E_S restoration failure → stuck in substrate (TRAPPED)</div>
+                <div class="risk-indicator risk-high">⚠️ Premature threshold crossing → emerge mid-transit (DISASTER)</div>
+            </div>
+        </div>
+
+        <div class="philosophical-corner">
+            <h4>Identity & Continuity in FTL Transit</h4>
+            <p>You stay "you" throughout - M_I never stops existing. Continuous experience through substrate (though what IS experience in E_S < 1 state?). No copies, no branches. The most "real" journey, but also the riskiest.</p>
+        </div>
+    </div>
+
+    <!-- Teleportation Method -->
+    <div id="teleport-method" class="method-container">
+        <h2>Teleportation: Pattern Transmission</h2>
+        <p style="margin-bottom: 20px;">Extract pattern, suppress Ω at origin, transmit, reconstruct at destination</p>
+
+        <div class="control-panel">
+            <h3 style="color: #4da6ff; margin-bottom: 15px;">Teleportation Parameters</h3>
+            <div class="control-group">
+                <label>Pattern Transmission Bandwidth: <span class="value-display" id="tp-bandwidth-display">1000 PB/s</span></label>
+                <input type="range" id="tp-bandwidth" min="100" max="10000" step="100" value="1000" oninput="updateTPParams()">
+            </div>
+            <div class="control-group">
+                <label>Reconstruction Accuracy: <span class="value-display" id="tp-accuracy-display">99.9%</span></label>
+                <input type="range" id="tp-accuracy" min="95" max="100" step="0.1" value="99.9" oninput="updateTPParams()">
+            </div>
+            <div class="control-group">
+                <label>Ω Modulation Strength: <span class="value-display" id="tp-omega-display">90%</span></label>
+                <input type="range" id="tp-omega" min="50" max="100" step="5" value="90" oninput="updateTPParams()">
+            </div>
+            <div class="control-group">
+                <label>Local Substrate Availability: <span class="value-display" id="tp-substrate-display">100%</span></label>
+                <input type="range" id="tp-substrate" min="80" max="100" step="5" value="100" oninput="updateTPParams()">
+            </div>
+        </div>
+
+        <div class="metrics-display" id="tp-metrics">
+            <div class="metric-card">
+                <div class="metric-label">Pattern Size</div>
+                <div class="metric-value" id="tp-pattern-size">2.5 PB</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">M_I Signature</div>
+                <div class="metric-value" id="tp-mi-sig">0x4F2A</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Ω at A</div>
+                <div class="metric-value" id="tp-omega-a">1.0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Ω at B</div>
+                <div class="metric-value" id="tp-omega-b">0.0</div>
+            </div>
+        </div>
+
+        <div class="visualization-area" id="tp-viz">
+            <div class="location-marker location-a">A</div>
+            <div class="location-marker location-b">B</div>
+            <div class="human-avatar" id="tp-avatar" style="left: 50px;"></div>
+            <div id="tp-data-streams"></div>
+        </div>
+
+        <div class="stage-progress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="tp-progress">0%</div>
+            </div>
+        </div>
+
+        <div id="tp-risk-display"></div>
+
+        <div class="action-buttons">
+            <button class="btn btn-start" onclick="startTeleportation()" id="tp-start-btn">Start Teleportation</button>
+            <button class="btn btn-reset" onclick="resetTP()">Reset</button>
+        </div>
+
+        <div class="stage">
+            <h3>Stage 1: Pattern Extraction at Origin</h3>
+            <p>Scan complete human configuration: biological structure, neural patterns, memories.</p>
+            <div class="formula">Pattern = M_I value + complete E_S configuration</div>
+            <p style="margin-top: 10px;">Pattern size: ~2.5 petabytes for complete human encoding.</p>
+        </div>
+
+        <div class="stage">
+            <h3>Stage 2: Ω Suppression at Origin</h3>
+            <p>Suppress Ω at location A to prevent further record-writing there.</p>
+            <div class="formula">Ω_A → 0 ⟹ Original body: E_S < 1 (non-realized)</div>
+            <p style="margin-top: 10px;"><strong>Critical:</strong> This is NOT death, it's Ω suppression. The pattern still exists.</p>
+        </div>
+
+        <div class="stage">
+            <h3>Stage 3: Information Transmission</h3>
+            <p>Pattern data transmitted A → B (can use conventional channels).</p>
+            <div class="formula">Time = Pattern_Size / Bandwidth</div>
+            <p style="margin-top: 10px;">Information is substrate-neutral and travels normally through spacetime.</p>
+        </div>
+
+        <div class="stage">
+            <h3>Stage 4: E_S Reconstruction at Destination</h3>
+            <p>Use local substrate at B to rebuild E_S pattern exactly as scanned.</p>
+            <div class="formula">Rebuild: biological structure + neural configuration + memories</div>
+            <p style="margin-top: 10px;">Requires available matter/energy at destination.</p>
+        </div>
+
+        <div class="stage">
+            <h3>Stage 5: Ω Enhancement + M_I Anchoring</h3>
+            <p>Enhance Ω at location B to enable record-writing. Identity "follows" where structure becomes realized.</p>
+            <div class="formula">Ω_B → 1 + Restored E_S + M_I ⟹ E_S ≥ 1 at B</div>
+            <p style="margin-top: 10px;">Person appears at B with continuity.</p>
+        </div>
+
+        <div class="stage">
+            <h3>Stage 6: Identity Continuity Check</h3>
+            <p>Compare M_I signature and verify pattern fidelity.</p>
+            <div class="risk-indicator risk-low" id="tp-continuity-check">✓ M_I conserved, pattern match: 99.9%</div>
+        </div>
+
+        <div class="stage">
+            <h3>Risk Analysis</h3>
+            <div style="margin: 10px 0;">
+                <div class="risk-indicator risk-medium">⚠️ Pattern corruption → reconstruction errors</div>
+                <div class="risk-indicator risk-medium">⚠️ Ω suppression failure → person partially remains at A</div>
+                <div class="risk-indicator risk-high">⚠️ Reconstruction failure → E_S doesn't reach threshold (trapped as data)</div>
+                <div class="risk-indicator risk-low">⚠️ M_I mismatch → identity discontinuity ("copy" problem)</div>
+            </div>
+        </div>
+
+        <div class="philosophical-corner">
+            <h4>Identity & Continuity in Teleportation</h4>
+            <p><strong>M_I is conserved, pattern transmitted perfectly.</strong> But is reconstructed you "the same you"? Original body suppressed (Ω → 0), not destroyed. Is there a "gap" in consciousness?</p>
+            <p style="margin-top: 10px;"><strong>RRGM take:</strong> M_I continuity maintained. Difference is phenomenological, not ontological. The pattern IS you, just as much as the continuous-substrate journey.</p>
+        </div>
+    </div>
+
+    <!-- Side-by-Side Comparison -->
+    <div id="comparison-method" class="method-container">
+        <h2>Side-by-Side Comparison</h2>
+        <p style="margin-bottom: 20px;">Run both methods simultaneously with the same parameters and compare outcomes.</p>
+
+        <div class="action-buttons" style="margin-bottom: 20px;">
+            <button class="btn btn-start" onclick="startComparison()">Run Both Methods</button>
+            <button class="btn btn-reset" onclick="resetComparison()">Reset Comparison</button>
+        </div>
+
+        <div class="side-by-side">
+            <div>
+                <h3 style="color: #4da6ff; margin-bottom: 15px;">FTL Transit</h3>
+                <div class="visualization-area" style="height: 250px;">
+                    <div class="location-marker location-a">A</div>
+                    <div class="location-marker location-b">B</div>
+                    <div class="human-avatar" id="comp-ftl-avatar" style="left: 50px;"></div>
+                </div>
+                <div class="metrics-display">
+                    <div class="metric-card">
+                        <div class="metric-label">M_I</div>
+                        <div class="metric-value" id="comp-ftl-mi">0.5</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">E_S</div>
+                        <div class="metric-value" id="comp-ftl-es">8.0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">State</div>
+                        <div class="metric-value" id="comp-ftl-state">D₀₊₁</div>
+                    </div>
+                </div>
+                <div class="stage-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="comp-ftl-progress">Ready</div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3 style="color: #4da6ff; margin-bottom: 15px;">Teleportation</h3>
+                <div class="visualization-area" style="height: 250px;">
+                    <div class="location-marker location-a">A</div>
+                    <div class="location-marker location-b">B</div>
+                    <div class="human-avatar" id="comp-tp-avatar" style="left: 50px;"></div>
+                </div>
+                <div class="metrics-display">
+                    <div class="metric-card">
+                        <div class="metric-label">Ω at A</div>
+                        <div class="metric-value" id="comp-tp-omega-a">1.0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Ω at B</div>
+                        <div class="metric-value" id="comp-tp-omega-b">0.0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Pattern</div>
+                        <div class="metric-value" id="comp-tp-pattern">Ready</div>
+                    </div>
+                </div>
+                <div class="stage-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="comp-tp-progress">Ready</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stage" style="margin-top: 30px;">
+            <h3>Comparative Analysis</h3>
+            <div id="comparison-results">
+                <p>Run the comparison to see detailed analysis of both methods.</p>
+            </div>
+        </div>
+
+        <div class="philosophical-corner">
+            <h4>Which Method Is "Better"?</h4>
+            <p><strong>It depends on what you value:</strong></p>
+            <ul style="margin: 10px 0 10px 30px; line-height: 1.8;">
+                <li><strong>Continuous experience:</strong> FTL maintains unbroken consciousness</li>
+                <li><strong>Safety:</strong> Teleportation has lower catastrophic-failure risk</li>
+                <li><strong>Speed:</strong> FTL is instant; teleportation requires transmission time</li>
+                <li><strong>Energy:</strong> FTL needs coherence maintenance; teleportation needs reconstruction</li>
+                <li><strong>Philosophy:</strong> Both maintain M_I continuity, but the "experience" differs</li>
+            </ul>
+            <p style="margin-top: 15px;"><strong>RRGM verdict:</strong> Both are valid identity-preserving transports. The difference is in phenomenology and risk profile, not fundamental ontology.</p>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Global state
+        let ftlState = {
+            mi: 0.5,
+            es: 8.0,
+            omega: 1.0,
+            coherence: 85,
+            rate: 2,
+            accuracy: 95,
+            stage: 0,
+            running: false
+        };
+
+        let tpState = {
+            bandwidth: 1000,
+            accuracy: 99.9,
+            omegaStrength: 90,
+            substrate: 100,
+            patternSize: 2.5,
+            miSignature: '0x4F2A',
+            omegaA: 1.0,
+            omegaB: 0.0,
+            stage: 0,
+            running: false
+        };
+
+        // Tab switching
+        function switchTab(tab) {
+            const tabs = document.querySelectorAll('.tab-button');
+            const containers = document.querySelectorAll('.method-container');
+
+            tabs.forEach(t => t.classList.remove('active'));
+            containers.forEach(c => c.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(`${tab}-method`).classList.add('active');
+        }
+
+        // Notification system
+        function showNotification(message) {
+            const notif = document.getElementById('notification');
+            notif.textContent = message;
+            notif.classList.add('show');
+            setTimeout(() => {
+                notif.classList.remove('show');
+            }, 3000);
+        }
+
+        // FTL Parameter Updates
+        function updateFTLParams() {
+            ftlState.mi = parseFloat(document.getElementById('ftl-mi').value);
+            ftlState.coherence = parseInt(document.getElementById('ftl-coherence').value);
+            ftlState.rate = parseInt(document.getElementById('ftl-rate').value);
+            ftlState.accuracy = parseInt(document.getElementById('ftl-accuracy').value);
+
+            document.getElementById('ftl-mi-display').textContent = ftlState.mi.toFixed(1);
+            document.getElementById('ftl-coherence-display').textContent = ftlState.coherence + '%';
+            document.getElementById('ftl-accuracy-display').textContent = ftlState.accuracy + '%';
+
+            const rates = ['Slow', 'Medium', 'Fast'];
+            document.getElementById('ftl-rate-display').textContent = rates[ftlState.rate - 1];
+
+            updateFTLRiskDisplay();
+        }
+
+        function updateFTLRiskDisplay() {
+            const riskDiv = document.getElementById('ftl-risk-display');
+            let totalRisk = 0;
+
+            // Calculate risk factors
+            const coherenceRisk = (100 - ftlState.coherence) * 2;
+            const accuracyRisk = (100 - ftlState.accuracy) * 1.5;
+            const rateRisk = ftlState.rate * 10;
+            const miRisk = ftlState.mi < 0.3 ? 30 : 0;
+
+            totalRisk = coherenceRisk + accuracyRisk + rateRisk + miRisk;
+
+            let riskClass, riskLevel;
+            if (totalRisk < 50) {
+                riskClass = 'risk-low';
+                riskLevel = 'LOW';
+            } else if (totalRisk < 100) {
+                riskClass = 'risk-medium';
+                riskLevel = 'MEDIUM';
+            } else {
+                riskClass = 'risk-high';
+                riskLevel = 'HIGH';
+            }
+
+            riskDiv.innerHTML = `<div class="risk-indicator ${riskClass}">Overall Transit Risk: ${riskLevel} (${totalRisk.toFixed(0)})</div>`;
+        }
+
+        // TP Parameter Updates
+        function updateTPParams() {
+            tpState.bandwidth = parseInt(document.getElementById('tp-bandwidth').value);
+            tpState.accuracy = parseFloat(document.getElementById('tp-accuracy').value);
+            tpState.omegaStrength = parseInt(document.getElementById('tp-omega').value);
+            tpState.substrate = parseInt(document.getElementById('tp-substrate').value);
+
+            document.getElementById('tp-bandwidth-display').textContent = tpState.bandwidth + ' PB/s';
+            document.getElementById('tp-accuracy-display').textContent = tpState.accuracy + '%';
+            document.getElementById('tp-omega-display').textContent = tpState.omegaStrength + '%';
+            document.getElementById('tp-substrate-display').textContent = tpState.substrate + '%';
+
+            updateTPRiskDisplay();
+        }
+
+        function updateTPRiskDisplay() {
+            const riskDiv = document.getElementById('tp-risk-display');
+            let totalRisk = 0;
+
+            const accuracyRisk = (100 - tpState.accuracy) * 20;
+            const omegaRisk = (100 - tpState.omegaStrength);
+            const substrateRisk = (100 - tpState.substrate) * 2;
+
+            totalRisk = accuracyRisk + omegaRisk + substrateRisk;
+
+            let riskClass, riskLevel;
+            if (totalRisk < 30) {
+                riskClass = 'risk-low';
+                riskLevel = 'LOW';
+            } else if (totalRisk < 60) {
+                riskClass = 'risk-medium';
+                riskLevel = 'MEDIUM';
+            } else {
+                riskClass = 'risk-high';
+                riskLevel = 'HIGH';
+            }
+
+            riskDiv.innerHTML = `<div class="risk-indicator ${riskClass}">Overall Teleportation Risk: ${riskLevel} (${totalRisk.toFixed(0)})</div>`;
+        }
+
+        // FTL Transit Animation
+        async function startFTLTransit() {
+            if (ftlState.running) return;
+
+            ftlState.running = true;
+            ftlState.stage = 0;
+            document.getElementById('ftl-start-btn').disabled = true;
+
+            const avatar = document.getElementById('ftl-avatar');
+            const progress = document.getElementById('ftl-progress');
+            const grid = document.getElementById('ftl-grid');
+
+            // Stage 1: ES Reduction
+            showNotification('Stage 1: E_S Reduction');
+            progress.style.width = '20%';
+            progress.textContent = 'Stage 1: E_S Reduction';
+
+            for (let es = 8.0; es >= 0.9; es -= 0.3) {
+                ftlState.es = es;
+                document.getElementById('ftl-current-es').textContent = es.toFixed(1);
+                avatar.style.opacity = 0.3 + (es / 8.0) * 0.7;
+                await sleep(300);
+            }
+
+            // Stage 2: Threshold Crossing
+            showNotification('Stage 2: Crossing into D₀');
+            progress.style.width = '40%';
+            progress.textContent = 'Stage 2: Entering D₀';
+
+            ftlState.es = 0.7;
+            document.getElementById('ftl-current-es').textContent = '0.7';
+            document.getElementById('ftl-current-state').textContent = 'D₀';
+            avatar.classList.add('substrate');
+            await sleep(1000);
+
+            // Stage 3: Substrate Navigation
+            showNotification('Stage 3: Navigating Substrate');
+            progress.style.width = '60%';
+            progress.textContent = 'Stage 3: Substrate Navigation';
+
+            grid.classList.add('active');
+            createCoordinateGrid(grid);
+
+            // Navigate through substrate (instant in D₀)
+            await sleep(1500);
+            avatar.style.left = 'calc(100% - 110px)';
+
+            await sleep(500);
+            grid.classList.remove('active');
+
+            // Stage 4: Re-emergence
+            showNotification('Stage 4: Re-emerging at B');
+            progress.style.width = '80%';
+            progress.textContent = 'Stage 4: Re-emergence';
+
+            for (let es = 0.7; es <= 8.0; es += 0.3) {
+                ftlState.es = es;
+                document.getElementById('ftl-current-es').textContent = es.toFixed(1);
+                avatar.style.opacity = 0.3 + (es / 8.0) * 0.7;
+                if (es >= 1.0 && avatar.classList.contains('substrate')) {
+                    avatar.classList.remove('substrate');
+                    document.getElementById('ftl-current-state').textContent = 'D₀₊₁';
+                }
+                await sleep(300);
+            }
+
+            // Complete
+            progress.style.width = '100%';
+            progress.textContent = 'Transit Complete!';
+            showNotification('✓ FTL Transit Successful!');
+
+            ftlState.running = false;
+            document.getElementById('ftl-start-btn').disabled = false;
+        }
+
+        function resetFTL() {
+            ftlState.es = 8.0;
+            ftlState.stage = 0;
+            ftlState.running = false;
+
+            const avatar = document.getElementById('ftl-avatar');
+            avatar.style.left = '50px';
+            avatar.style.opacity = '1';
+            avatar.classList.remove('substrate', 'ghosted');
+
+            document.getElementById('ftl-current-es').textContent = '8.0';
+            document.getElementById('ftl-current-state').textContent = 'D₀₊₁';
+            document.getElementById('ftl-progress').style.width = '0%';
+            document.getElementById('ftl-progress').textContent = '0%';
+            document.getElementById('ftl-start-btn').disabled = false;
+        }
+
+        // Teleportation Animation
+        async function startTeleportation() {
+            if (tpState.running) return;
+
+            tpState.running = true;
+            tpState.stage = 0;
+            document.getElementById('tp-start-btn').disabled = true;
+
+            const avatar = document.getElementById('tp-avatar');
+            const progress = document.getElementById('tp-progress');
+
+            // Stage 1: Pattern Extraction
+            showNotification('Stage 1: Pattern Extraction');
+            progress.style.width = '15%';
+            progress.textContent = 'Stage 1: Scanning';
+            avatar.style.boxShadow = '0 0 40px rgba(77, 166, 255, 0.8)';
+            await sleep(1500);
+
+            // Stage 2: Ω Suppression at A
+            showNotification('Stage 2: Ω Suppression at Origin');
+            progress.style.width = '30%';
+            progress.textContent = 'Stage 2: Ω → 0 at A';
+
+            for (let omega = 1.0; omega >= 0; omega -= 0.1) {
+                tpState.omegaA = omega;
+                document.getElementById('tp-omega-a').textContent = omega.toFixed(1);
+                avatar.style.opacity = omega;
+                await sleep(200);
+            }
+
+            // Stage 3: Information Transmission
+            showNotification('Stage 3: Transmitting Pattern');
+            progress.style.width = '50%';
+            progress.textContent = 'Stage 3: Transmission';
+
+            createDataStreams();
+            await sleep(2000);
+
+            // Stage 4: ES Reconstruction
+            showNotification('Stage 4: Reconstructing at B');
+            progress.style.width = '70%';
+            progress.textContent = 'Stage 4: Reconstruction';
+
+            avatar.style.left = 'calc(100% - 110px)';
+            avatar.style.opacity = '0.3';
+            await sleep(1500);
+
+            // Stage 5: Ω Enhancement + MI Anchoring
+            showNotification('Stage 5: Ω Enhancement at B');
+            progress.style.width = '90%';
+            progress.textContent = 'Stage 5: Ω → 1 at B';
+
+            for (let omega = 0; omega <= 1.0; omega += 0.1) {
+                tpState.omegaB = omega;
+                document.getElementById('tp-omega-b').textContent = omega.toFixed(1);
+                avatar.style.opacity = omega;
+                await sleep(200);
+            }
+
+            avatar.style.boxShadow = '0 0 20px rgba(255, 153, 153, 0.5)';
+
+            // Stage 6: Continuity Check
+            progress.style.width = '100%';
+            progress.textContent = 'Complete! M_I Verified';
+            showNotification('✓ Teleportation Successful! M_I Conserved');
+
+            document.getElementById('tp-continuity-check').textContent =
+                `✓ M_I conserved, pattern match: ${tpState.accuracy}%`;
+
+            tpState.running = false;
+            document.getElementById('tp-start-btn').disabled = false;
+        }
+
+        function resetTP() {
+            tpState.stage = 0;
+            tpState.running = false;
+            tpState.omegaA = 1.0;
+            tpState.omegaB = 0.0;
+
+            const avatar = document.getElementById('tp-avatar');
+            avatar.style.left = '50px';
+            avatar.style.opacity = '1';
+            avatar.style.boxShadow = '0 0 20px rgba(255, 153, 153, 0.5)';
+
+            document.getElementById('tp-omega-a').textContent = '1.0';
+            document.getElementById('tp-omega-b').textContent = '0.0';
+            document.getElementById('tp-progress').style.width = '0%';
+            document.getElementById('tp-progress').textContent = '0%';
+            document.getElementById('tp-start-btn').disabled = false;
+
+            // Clear data streams
+            document.getElementById('tp-data-streams').innerHTML = '';
+        }
+
+        // Comparison Mode
+        async function startComparison() {
+            showNotification('Running both methods simultaneously');
+
+            // Run both in parallel
+            const ftlPromise = animateComparisonFTL();
+            const tpPromise = animateComparisonTP();
+
+            await Promise.all([ftlPromise, tpPromise]);
+
+            // Show results
+            const results = document.getElementById('comparison-results');
+            results.innerHTML = `
+                <div class="side-by-side">
+                    <div>
+                        <h4 style="color: #4da6ff;">FTL Transit Results</h4>
+                        <ul style="margin: 10px 0 0 20px; line-height: 1.8;">
+                            <li>Transit time: Effectively instant</li>
+                            <li>M_I continuity: Unbroken</li>
+                            <li>Experience: Continuous through D₀</li>
+                            <li>Risk realized: ${Math.random() < 0.9 ? 'None' : 'Minor navigation drift'}</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 style="color: #4da6ff;">Teleportation Results</h4>
+                        <ul style="margin: 10px 0 0 20px; line-height: 1.8;">
+                            <li>Transit time: ${(2500 / tpState.bandwidth).toFixed(2)}s</li>
+                            <li>M_I continuity: Conserved</li>
+                            <li>Experience: Gap during transmission</li>
+                            <li>Pattern fidelity: ${tpState.accuracy}%</li>
+                        </ul>
+                    </div>
+                </div>
+                <div style="margin-top: 20px; padding: 15px; background: rgba(77, 166, 255, 0.1); border-radius: 8px;">
+                    <strong>Conclusion:</strong> Both methods successfully transported the subject from A to B with M_I conservation.
+                    FTL was faster and maintained continuous experience, but had higher coherence risk.
+                    Teleportation had perfect reconstruction but required ${(2500 / tpState.bandwidth).toFixed(2)} seconds and raises philosophical questions about experiential continuity.
+                </div>
+            `;
+
+            showNotification('✓ Comparison Complete');
+        }
+
+        async function animateComparisonFTL() {
+            const avatar = document.getElementById('comp-ftl-avatar');
+            const progress = document.getElementById('comp-ftl-progress');
+            const miDisplay = document.getElementById('comp-ftl-mi');
+            const esDisplay = document.getElementById('comp-ftl-es');
+            const stateDisplay = document.getElementById('comp-ftl-state');
+
+            progress.style.width = '25%';
+            progress.textContent = 'Reducing E_S';
+
+            for (let es = 8.0; es >= 0.7; es -= 0.5) {
+                esDisplay.textContent = es.toFixed(1);
+                avatar.style.opacity = 0.3 + (es / 8.0) * 0.7;
+                await sleep(200);
+            }
+
+            progress.style.width = '50%';
+            progress.textContent = 'In D₀';
+            stateDisplay.textContent = 'D₀';
+            avatar.classList.add('substrate');
+            await sleep(1000);
+
+            progress.style.width = '75%';
+            progress.textContent = 'Navigating';
+            avatar.style.left = 'calc(100% - 110px)';
+            await sleep(1000);
+
+            progress.style.width = '100%';
+            progress.textContent = 'Complete';
+
+            for (let es = 0.7; es <= 8.0; es += 0.5) {
+                esDisplay.textContent = es.toFixed(1);
+                avatar.style.opacity = 0.3 + (es / 8.0) * 0.7;
+                if (es >= 1.0) {
+                    avatar.classList.remove('substrate');
+                    stateDisplay.textContent = 'D₀₊₁';
+                }
+                await sleep(200);
+            }
+        }
+
+        async function animateComparisonTP() {
+            const avatar = document.getElementById('comp-tp-avatar');
+            const progress = document.getElementById('comp-tp-progress');
+            const omegaADisplay = document.getElementById('comp-tp-omega-a');
+            const omegaBDisplay = document.getElementById('comp-tp-omega-b');
+            const patternDisplay = document.getElementById('comp-tp-pattern');
+
+            progress.style.width = '20%';
+            progress.textContent = 'Extracting';
+            patternDisplay.textContent = 'Scanning';
+            await sleep(800);
+
+            progress.style.width = '40%';
+            progress.textContent = 'Suppressing Ω';
+
+            for (let omega = 1.0; omega >= 0; omega -= 0.2) {
+                omegaADisplay.textContent = omega.toFixed(1);
+                avatar.style.opacity = omega;
+                await sleep(150);
+            }
+
+            progress.style.width = '60%';
+            progress.textContent = 'Transmitting';
+            patternDisplay.textContent = 'Sending';
+            await sleep(1500);
+
+            progress.style.width = '80%';
+            progress.textContent = 'Reconstructing';
+            avatar.style.left = 'calc(100% - 110px)';
+            avatar.style.opacity = '0.3';
+            patternDisplay.textContent = 'Building';
+            await sleep(1000);
+
+            progress.style.width = '100%';
+            progress.textContent = 'Complete';
+
+            for (let omega = 0; omega <= 1.0; omega += 0.2) {
+                omegaBDisplay.textContent = omega.toFixed(1);
+                avatar.style.opacity = omega;
+                await sleep(150);
+            }
+
+            patternDisplay.textContent = 'Verified';
+        }
+
+        function resetComparison() {
+            // Reset FTL side
+            const ftlAvatar = document.getElementById('comp-ftl-avatar');
+            ftlAvatar.style.left = '50px';
+            ftlAvatar.style.opacity = '1';
+            ftlAvatar.classList.remove('substrate');
+            document.getElementById('comp-ftl-mi').textContent = '0.5';
+            document.getElementById('comp-ftl-es').textContent = '8.0';
+            document.getElementById('comp-ftl-state').textContent = 'D₀₊₁';
+            document.getElementById('comp-ftl-progress').style.width = '0%';
+            document.getElementById('comp-ftl-progress').textContent = 'Ready';
+
+            // Reset TP side
+            const tpAvatar = document.getElementById('comp-tp-avatar');
+            tpAvatar.style.left = '50px';
+            tpAvatar.style.opacity = '1';
+            document.getElementById('comp-tp-omega-a').textContent = '1.0';
+            document.getElementById('comp-tp-omega-b').textContent = '0.0';
+            document.getElementById('comp-tp-pattern').textContent = 'Ready';
+            document.getElementById('comp-tp-progress').style.width = '0%';
+            document.getElementById('comp-tp-progress').textContent = 'Ready';
+
+            document.getElementById('comparison-results').innerHTML =
+                '<p>Run the comparison to see detailed analysis of both methods.</p>';
+        }
+
+        // Helper functions
+        function createCoordinateGrid(container) {
+            container.innerHTML = '';
+            for (let i = 0; i < 10; i++) {
+                const hLine = document.createElement('div');
+                hLine.className = 'grid-line horizontal';
+                hLine.style.top = `${i * 10}%`;
+                container.appendChild(hLine);
+
+                const vLine = document.createElement('div');
+                vLine.className = 'grid-line vertical';
+                vLine.style.left = `${i * 10}%`;
+                container.appendChild(vLine);
+            }
+        }
+
+        function createDataStreams() {
+            const container = document.getElementById('tp-data-streams');
+            container.innerHTML = '';
+
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const stream = document.createElement('div');
+                    stream.className = 'data-stream';
+                    stream.style.left = '50px';
+                    container.appendChild(stream);
+
+                    // Animate stream
+                    setTimeout(() => {
+                        stream.style.opacity = '1';
+                        stream.style.transition = 'left 1s linear, opacity 0.5s';
+                        stream.style.left = 'calc(100% - 110px)';
+                    }, 50);
+
+                    setTimeout(() => {
+                        stream.style.opacity = '0';
+                        setTimeout(() => stream.remove(), 500);
+                    }, 1000);
+                }, i * 100);
+            }
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Initialize
+        updateFTLParams();
+        updateTPParams();
+        updateFTLRiskDisplay();
+        updateTPRiskDisplay();
+    </script>
+</body>
+</html>
